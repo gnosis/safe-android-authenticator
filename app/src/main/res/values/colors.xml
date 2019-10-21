@@ -2,5 +2,15 @@
 <resources>
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
+    <color name="colorSecondary">#5D6D74</color>
+    <color name="secondaryText">@color/colorSecondary</color>
+    <color name="darkText">#3f3d56</color>
     <color name="colorAccent">#D81B60</color>
+    <color name="divider">#19252223</color>
+    <color name="white">#fff</color>
+    <color name="transparent">#00000000</color>
+    <color name="mediumGrey">#b2b5b2</color>
+    <color name="pressedShade">#33000000</color>
+    <color name="ic_launcher_background">#008C73</color>
+    <color name="secondaryHeader">#19252223</color>
 </resources>

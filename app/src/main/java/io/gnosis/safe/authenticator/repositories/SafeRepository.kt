@@ -21,8 +21,11 @@ import pm.gnosis.svalinn.security.EncryptionManager
 import pm.gnosis.utils.*
 import java.math.BigInteger
 import java.nio.charset.Charset
+import kotlin.math.absoluteValue
 
 interface SafeRepository {
+
+    suspend fun loadPendingTransactions(safe: Solidity.Address): List<ServiceSafeTx>
 
     data class SafeInfo(
         val address: Solidity.Address,
@@ -31,11 +34,12 @@ interface SafeRepository {
         val threshold: BigInteger
     )
 
-    data class PendingSafeTx(
+    data class ServiceSafeTx(
         val hash: String,
         val tx: SafeTx,
         val execInfo: SafeTxExecInfo,
-        val confirmations: List<Pair<Solidity.Address, String?>>
+        val confirmations: List<Pair<Solidity.Address, String?>>,
+        val executed: Boolean
     )
 
     data class SafeTx(
@@ -81,8 +85,11 @@ class SafeRepositoryImpl(
             throw RuntimeException("Could not setup encryption")
     }
 
-    suspend fun loadDeviceId(): Solidity.Address {
-        return getKeyPair().address.toAddress()
+    private fun Solidity.Address.derivationIndex() =
+        value.toInt().absoluteValue.toLong()
+
+    suspend fun loadDeviceId(safe: Solidity.Address): Solidity.Address {
+        return getKeyPair(safe.derivationIndex()).address.toAddress()
     }
 
     suspend fun loadMnemonic(): String {
@@ -97,10 +104,10 @@ class SafeRepositoryImpl(
         }
     }
 
-    private suspend fun getKeyPair(): KeyPair {
+    private suspend fun getKeyPair(index: Long = 0): KeyPair {
         val seed = bip39.mnemonicToSeed(loadMnemonic())
         val hdNode = KeyGenerator.masterNode(ByteString.of(*seed))
-        return hdNode.derive(KeyGenerator.BIP44_PATH_ETHEREUM).deriveChild(0).keyPair
+        return hdNode.derive(KeyGenerator.BIP44_PATH_ETHEREUM).deriveChild(index).keyPair
     }
 
     suspend fun loadSafeInfo(): SafeRepository.SafeInfo {
@@ -156,14 +163,13 @@ class SafeRepositoryImpl(
         ).param0.value
     }
 
-    suspend fun loadPendingTransactions(): List<SafeRepository.PendingSafeTx> {
-        val safeAddress = "0x0".asEthereumAddress()!!
-        val currentNonce = loadSafeNonce(safeAddress)
-        val transactions = transactionServiceApi.loadTransactions(safeAddress.asEthereumAddressChecksumString())
+    override suspend fun loadPendingTransactions(safe: Solidity.Address): List<SafeRepository.ServiceSafeTx> {
+        //val currentNonce = loadSafeNonce(safe)
+        val transactions = transactionServiceApi.loadTransactions(safe.asEthereumAddressChecksumString())
         return transactions.results.mapNotNull {
-            val nonce = it.nonce.decimalAsBigIntegerOrNull()
-            if (it.isExecuted || nonce == null || nonce < currentNonce) return@mapNotNull null
-            SafeRepository.PendingSafeTx(
+            val nonce = it.nonce.decimalAsBigInteger()
+            //if (it.isExecuted || nonce == null || nonce < currentNonce) return@mapNotNull null
+            SafeRepository.ServiceSafeTx(
                 hash = it.safeTxHash,
                 tx = SafeRepository.SafeTx(
                     to = it.to?.asEthereumAddress() ?: Solidity.Address(BigInteger.ZERO),
@@ -181,7 +187,8 @@ class SafeRepositoryImpl(
                 ),
                 confirmations = it.confirmations.map { confirmation ->
                     confirmation.owner.asEthereumAddress()!! to confirmation.signature
-                }
+                },
+                executed = it.isExecuted
             )
         }
     }

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="divider_width">1dp</dimen>
+    <dimen name="indicator_size">8dp</dimen>
+    <dimen name="primary_button_radius">24dp</dimen>
+    <dimen name="header_height">160dp</dimen>
+    <dimen name="qr_code_size">128dp</dimen>
+</resources>

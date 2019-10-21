@@ -6,13 +6,20 @@ import com.squareup.picasso.Picasso
 import io.gnosis.safe.authenticator.data.JsonRpcApi
 import io.gnosis.safe.authenticator.data.TransactionServiceApi
 import io.gnosis.safe.authenticator.data.adapter.*
+import io.gnosis.safe.authenticator.repositories.SafeRepository
+import io.gnosis.safe.authenticator.repositories.SafeRepositoryImpl
+import io.gnosis.safe.authenticator.ui.transactions.TransactionsContract
+import io.gnosis.safe.authenticator.ui.transactions.TransactionsViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import pm.gnosis.mnemonic.Bip39
 import pm.gnosis.mnemonic.Bip39Generator
 import pm.gnosis.mnemonic.android.AndroidWordListProvider
+import pm.gnosis.model.Solidity
 import pm.gnosis.svalinn.common.PreferencesManager
 import pm.gnosis.svalinn.security.EncryptionManager
 import pm.gnosis.svalinn.security.FingerprintHelper
@@ -23,6 +30,7 @@ import pm.gnosis.svalinn.security.impls.AndroidKeyStorage
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
+@ExperimentalCoroutinesApi
 class SafeApp: Application() {
     override fun onCreate() {
         super.onCreate()
@@ -32,7 +40,7 @@ class SafeApp: Application() {
             // Android context
             androidContext(this@SafeApp)
             // modules
-            modules(listOf(coreModule, apiModule))
+            modules(listOf(coreModule, apiModule, repositoryModule, viewModelModule))
         }
     }
 
@@ -89,5 +97,14 @@ class SafeApp: Application() {
                 .build()
                 .create(JsonRpcApi::class.java)
         }
+    }
+
+    private val repositoryModule = module {
+        single<SafeRepository> { SafeRepositoryImpl(get(), get(), get(), get(), get()) }
+    }
+
+    @ExperimentalCoroutinesApi
+    private val viewModelModule = module {
+        viewModel<TransactionsContract> { TransactionsViewModel(get()) }
     }
 }
