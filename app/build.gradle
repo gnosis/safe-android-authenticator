@@ -1,0 +1,105 @@
+apply plugin: 'com.android.application'
+
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'bivrost'
+
+android {
+    compileSdkVersion 29
+    defaultConfig {
+        applicationId "io.gnosis.safe.authenticator"
+        minSdkVersion 21
+        targetSdkVersion 29
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField javaTypes.STRING, "BLOCK_EXPLORER_TX", asString(getKey("BLOCK_EXPLORER_TX", "https://rinkeby.etherscan.io/tx/%s"))
+        buildConfigField javaTypes.STRING, "INFURA_API_KEY", asString(getKey("INFURA_API_KEY", ""))
+        buildConfigField javaTypes.STRING, "BLOCKCHAIN_NET_URL", asString(getKey("BLOCKCHAIN_NET_URL", "https://rinkeby.infura.io/v3/"))
+        buildConfigField javaTypes.STRING, "RELAY_SERVICE_URL", asString(getKey("RELAY_SERVICE_URL", "https://safe-relay.rinkeby.gnosis.pm/api/"))
+        buildConfigField javaTypes.STRING, "TRANSACTION_SERVICE_URL", asString(getKey("TRANSACTION_SERVICE_URL", "https://safe-transaction.staging.gnosisdev.com/api/"))
+
+        vectorDrawables.useSupportLibrary = true
+        project.ext.set("archivesBaseName", String.format("safe-authenticator-%s", defaultConfig.versionCode))
+    }
+    signingConfigs {
+        debug {
+            // We add the debug keystore to repo so that the travis build will always have the same signature
+            storeFile file("../debug.keystore")
+        }
+    }
+    buildTypes {
+        debug {
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
+            minifyEnabled false
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${versions.kotlin}"
+
+    implementation "androidx.appcompat:appcompat:${versions.androidx_app_compat}"
+    implementation "androidx.core:core-ktx:${versions.androidx_core_ktx}"
+    implementation "androidx.constraintlayout:constraintlayout:${versions.androidx_constraint_layout}"
+    implementation "androidx.recyclerview:recyclerview:$versions.androidx_recycler_view"
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:${versions.androidx_swipe_refresh}"
+
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$versions.androidx_lifecycle"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$versions.androidx_lifecycle"
+
+    implementation "com.google.android.material:material:$versions.material"
+
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$versions.kotlinx_coroutines"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$versions.kotlinx_coroutines"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-rx2:$versions.kotlinx_coroutines"
+
+    implementation "com.github.gnosis.svalinn-kotlin:blockies:$versions.svalinn"
+    implementation "com.github.gnosis.svalinn-kotlin:crypto:$versions.svalinn"
+    implementation "com.github.gnosis.svalinn-kotlin:models:$versions.svalinn"
+    implementation "com.github.gnosis.svalinn-kotlin:utils:$versions.svalinn"
+    implementation "com.github.gnosis.svalinn-kotlin:android-common:$versions.svalinn"
+    implementation "com.github.gnosis.svalinn-kotlin:security:$versions.svalinn"
+    implementation "com.github.gnosis.svalinn-kotlin:mnemonic:$versions.svalinn"
+    implementation "com.github.gnosis.svalinn-kotlin:mnemonic-android:$versions.svalinn"
+
+    implementation "com.github.gnosis.bivrost-kotlin:bivrost-solidity-types:$versions.bivrost"
+
+    implementation "com.squareup.retrofit2:retrofit:$versions.retrofit"
+    implementation("com.squareup.retrofit2:converter-moshi:$versions.retrofit") {
+        exclude group: "com.squareup.moshi", module: "moshi"
+    }
+
+    implementation "com.squareup.picasso:picasso:$versions.picasso"
+
+    // Koin for Android
+    implementation "org.koin:koin-android:$versions.koin"
+    // Koin Android Scope features
+    implementation "org.koin:koin-androidx-scope:$versions.koin"
+    // Koin Android ViewModel features
+    implementation "org.koin:koin-androidx-viewmodel:$versions.koin"
+    // Koin Android Experimental features
+    implementation "org.koin:koin-androidx-ext:$versions.koin"
+
+    implementation "com.squareup.moshi:moshi:$versions.moshi"
+    kapt "com.squareup.moshi:moshi-kotlin-codegen:$versions.moshi"
+
+    implementation "com.squareup.okhttp3:okhttp:$versions.okhttp"
+
+    implementation "com.github.komputing:KHex:0.6"
+
+    implementation 'com.google.android.gms:play-services-auth:17.0.0'
+    implementation "com.google.zxing:core:$versions.zxing"
+
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test:runner:1.2.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+}
