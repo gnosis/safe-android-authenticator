@@ -115,6 +115,7 @@ class NewTransactionActivity : BaseActivity<NewTransactionContract.State, NewTra
     }
 
     override fun updateState(state: NewTransactionContract.State) {
+        new_transaction_submit_btn.isEnabled = !state.loading
         if (new_transaction_nonce_input.text.toString().isBlank()) {
             new_transaction_nonce_input.setText(state.currentNonce?.toString())
         }
