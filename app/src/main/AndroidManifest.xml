@@ -1,6 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:dist="http://schemas.android.com/apk/distribution"
     package="io.gnosis.safe.authenticator">
+
     <uses-permission android:name="android.permission.INTERNET" />
 
     <dist:module dist:instant="true" />
@@ -22,5 +23,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ui.settings.SettingsActivity"
+            android:screenOrientation="portrait" />
+        <activity android:name=".ui.transactions.NewTransactionActivity" />
     </application>
 </manifest>

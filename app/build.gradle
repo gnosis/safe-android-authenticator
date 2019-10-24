@@ -19,7 +19,7 @@ android {
         buildConfigField javaTypes.STRING, "INFURA_API_KEY", asString(getKey("INFURA_API_KEY", ""))
         buildConfigField javaTypes.STRING, "BLOCKCHAIN_NET_URL", asString(getKey("BLOCKCHAIN_NET_URL", "https://rinkeby.infura.io/v3/"))
         buildConfigField javaTypes.STRING, "RELAY_SERVICE_URL", asString(getKey("RELAY_SERVICE_URL", "https://safe-relay.rinkeby.gnosis.pm/api/"))
-        buildConfigField javaTypes.STRING, "TRANSACTION_SERVICE_URL", asString(getKey("TRANSACTION_SERVICE_URL", "https://safe-transaction.rinkeby.gnosis.io/api/"))
+        buildConfigField javaTypes.STRING, "TRANSACTION_SERVICE_URL", asString(getKey("TRANSACTION_SERVICE_URL", "https://safe-transaction-service.staging.gnosisdev.com/api/"))
 
         vectorDrawables.useSupportLibrary = true
         project.ext.set("archivesBaseName", String.format("safe-authenticator-%s", defaultConfig.versionCode))

@@ -6,14 +6,27 @@
     android:layout_height="match_parent">
 
     <View
-        android:id="@+id/pending_txs_header_bg"
+        android:id="@+id/transactions_header_bg"
         android:layout_width="match_parent"
         android:layout_height="@dimen/header_height"
         android:background="@color/secondaryHeader"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <ImageView
+        android:id="@+id/transactions_settings_btn"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/selectable_background"
+        android:padding="16dp"
+        android:tint="@color/colorPrimary"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_settings_24dp" />
+
     <TextView
-        android:id="@+id/pending_txs_title"
+        android:id="@+id/transactions_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
@@ -23,12 +36,12 @@
         android:textColor="@color/colorPrimary"
         android:textSize="28sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@id/pending_txs_sub_title"
+        app:layout_constraintBottom_toTopOf="@id/transactions_sub_title"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="packed" />
 
     <TextView
-        android:id="@+id/pending_txs_sub_title"
+        android:id="@+id/transactions_sub_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingStart="24dp"
@@ -36,23 +49,36 @@
         android:text="Overview"
         android:textColor="@color/secondaryText"
         android:textSize="28sp"
-        app:layout_constraintBottom_toBottomOf="@id/pending_txs_header_bg"
-        app:layout_constraintTop_toBottomOf="@id/pending_txs_title"
+        app:layout_constraintBottom_toBottomOf="@id/transactions_header_bg"
+        app:layout_constraintTop_toBottomOf="@id/transactions_title"
         app:layout_constraintVertical_chainStyle="packed" />
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/pending_txs_refresh"
+        android:id="@+id/transactions_refresh"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/pending_txs_header_bg">
+        app:layout_constraintTop_toBottomOf="@id/transactions_header_bg">
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/pending_txs_list"
+            android:id="@+id/transactions_list"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:clipToPadding="false"
             android:padding="8dp"
             tools:listitem="@layout/item_pending_tx" />
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/transactions_add_tx_btn"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_margin="16dp"
+        android:padding="0dp"
+        android:scaleType="centerInside"
+        android:tint="@color/white"
+        app:backgroundTint="@color/colorPrimary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@drawable/ic_add_24dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>

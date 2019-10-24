@@ -25,6 +25,11 @@ import kotlin.math.absoluteValue
 
 interface SafeRepository {
 
+    suspend fun loadDeviceId(): Solidity.Address
+    suspend fun loadSafeAddress(): Solidity.Address
+    suspend fun confirmSafeTransaction(
+        safe: Solidity.Address, transaction: SafeTx, execInfo: SafeTxExecInfo
+    )
     suspend fun loadPendingTransactions(safe: Solidity.Address): List<ServiceSafeTx>
 
     data class SafeInfo(
@@ -65,6 +70,9 @@ interface SafeRepository {
     ) {
         val fees by lazy { (baseGas + txGas) * gasPrice }
     }
+
+    suspend fun loadSafeNonce(safe: Solidity.Address): BigInteger
+    suspend fun loadSafeInfo(safe: Solidity.Address): SafeInfo
 }
 
 class SafeRepositoryImpl(
@@ -85,14 +93,14 @@ class SafeRepositoryImpl(
             throw RuntimeException("Could not setup encryption")
     }
 
-    private fun Solidity.Address.derivationIndex() =
-        value.toInt().absoluteValue.toLong()
+    override suspend fun loadSafeAddress(): Solidity.Address = "0x3C8e177699560622B051DADEEE2CE4B3264a16C3".asEthereumAddress()!!
 
-    suspend fun loadDeviceId(safe: Solidity.Address): Solidity.Address {
-        return getKeyPair(safe.derivationIndex()).address.toAddress()
+    override suspend fun loadDeviceId(): Solidity.Address {
+        enforceEncryption()
+        return getKeyPair(0).address.toAddress()
     }
 
-    suspend fun loadMnemonic(): String {
+    private suspend fun loadMnemonic(): String {
         encryptionManager.unlockWithPassword(ENC_PASSWORD.toByteArray()).await()
         return (accountPrefs.getString(PREF_KEY_APP_MNEMONIC, null) ?: run {
             val generateMnemonic =
@@ -110,21 +118,20 @@ class SafeRepositoryImpl(
         return hdNode.derive(KeyGenerator.BIP44_PATH_ETHEREUM).deriveChild(index).keyPair
     }
 
-    suspend fun loadSafeInfo(): SafeRepository.SafeInfo {
-        val safeAddress = "0x0".asEthereumAddress()!!
+    override suspend fun loadSafeInfo(safe: Solidity.Address): SafeRepository.SafeInfo {
         val responses = jsonRpcApi.post(
             listOf(
                 JsonRpcApi.JsonRpcRequest(
                     id = 0,
                     method = "eth_getStorageAt",
-                    params = listOf(safeAddress, BigInteger.ZERO.toHexString(), "latest")
+                    params = listOf(safe, BigInteger.ZERO.toHexString(), "latest")
                 ),
                 JsonRpcApi.JsonRpcRequest(
                     id = 1,
                     method = "eth_call",
                     params = listOf(
                         mapOf(
-                            "to" to safeAddress,
+                            "to" to safe,
                             "data" to GnosisSafe.GetOwners.encode()
                         ), "latest"
                     )
@@ -134,7 +141,7 @@ class SafeRepositoryImpl(
                     method = "eth_call",
                     params = listOf(
                         mapOf(
-                            "to" to safeAddress,
+                            "to" to safe,
                             "data" to GnosisSafe.GetThreshold.encode()
                         ), "latest"
                     )
@@ -144,17 +151,17 @@ class SafeRepositoryImpl(
         val masterCopy = responses[0].result!!.asEthereumAddress()!!
         val owners = GnosisSafe.GetOwners.decode(responses[1].result!!).param0.items
         val threshold = GnosisSafe.GetThreshold.decode(responses[2].result!!).param0.value
-        return SafeRepository.SafeInfo(safeAddress, masterCopy, owners, threshold)
+        return SafeRepository.SafeInfo(safe, masterCopy, owners, threshold)
     }
 
-    private suspend fun loadSafeNonce(safeAddress: Solidity.Address): BigInteger {
+    override suspend fun loadSafeNonce(safe: Solidity.Address): BigInteger {
         return GnosisSafe.Nonce.decode(
             jsonRpcApi.post(
                 JsonRpcApi.JsonRpcRequest(
                     method = "eth_call",
                     params = listOf(
                         mapOf(
-                            "to" to safeAddress,
+                            "to" to safe,
                             "data" to GnosisSafe.Nonce.encode()
                         ), "latest"
                     )
@@ -193,15 +200,14 @@ class SafeRepositoryImpl(
         }
     }
 
-    suspend fun confirmSafeTransaction(
+    override suspend fun confirmSafeTransaction(
+        safe: Solidity.Address,
         transaction: SafeRepository.SafeTx,
-        execInfo: SafeRepository.SafeTxExecInfo,
-        confirmations: List<Pair<Solidity.Address, String?>>?
+        execInfo: SafeRepository.SafeTxExecInfo
     ) {
-        val safeAddress = "0x0".asEthereumAddress()!!
         val hash =
             calculateHash(
-                safeAddress,
+                safe,
                 transaction.to,
                 transaction.value,
                 transaction.data,
@@ -233,7 +239,7 @@ class SafeRepositoryImpl(
             confirmationType = ServiceTransactionRequest.CONFIRMATION,
             signature = signature.toSignatureString()
         )
-        transactionServiceApi.confirmTransaction(safeAddress.asEthereumAddressChecksumString(), confirmation)
+        transactionServiceApi.confirmTransaction(safe.asEthereumAddressChecksumString(), confirmation)
     }
 
     private fun ECDSASignature.toSignatureString() =

@@ -8,8 +8,9 @@ import io.gnosis.safe.authenticator.data.TransactionServiceApi
 import io.gnosis.safe.authenticator.data.adapter.*
 import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.repositories.SafeRepositoryImpl
-import io.gnosis.safe.authenticator.ui.transactions.TransactionsContract
-import io.gnosis.safe.authenticator.ui.transactions.TransactionsViewModel
+import io.gnosis.safe.authenticator.ui.settings.SettingsContract
+import io.gnosis.safe.authenticator.ui.settings.SettingsViewModel
+import io.gnosis.safe.authenticator.ui.transactions.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidContext
@@ -31,7 +32,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 @ExperimentalCoroutinesApi
-class SafeApp: Application() {
+class SafeApp : Application() {
     override fun onCreate() {
         super.onCreate()
         // start Koin!
@@ -106,5 +107,14 @@ class SafeApp: Application() {
     @ExperimentalCoroutinesApi
     private val viewModelModule = module {
         viewModel<TransactionsContract> { TransactionsViewModel(get()) }
+        viewModel<SettingsContract> { SettingsViewModel(get()) }
+        viewModel<NewTransactionContract> { NewTransactionViewModel(get()) }
+        viewModel<TransactionConfirmationContract> { (
+                                                         safe: Solidity.Address,
+                                                         transaction: SafeRepository.SafeTx,
+                                                         executionInfo: SafeRepository.SafeTxExecInfo
+                                                     ) ->
+            TransactionConfirmationViewModel(safe, transaction, executionInfo, get())
+        }
     }
 }
