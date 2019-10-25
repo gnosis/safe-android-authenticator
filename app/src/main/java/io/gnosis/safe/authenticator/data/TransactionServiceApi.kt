@@ -12,6 +12,9 @@ interface TransactionServiceApi {
     @GET("v1/safes/{address}/transactions/")
     suspend fun loadTransactions(@Path("address") address: String): PaginatedResult<ServiceTransaction>
 
+    @GET("v1/transactions/{hash}/")
+    suspend fun loadTransaction(@Path("hash") hash: String): ServiceTransaction
+
     @POST("v1/safes/{address}/transactions/")
     suspend fun confirmTransaction(@Path("address") address: String, @Body confirmation: ServiceTransactionRequest)
 

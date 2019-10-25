@@ -16,6 +16,21 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
+        android:id="@+id/pending_tx_value"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:gravity="end"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/pending_tx_description"
+        app:layout_constraintEnd_toStartOf="@id/pending_tx_confirmations"
+        app:layout_constraintStart_toEndOf="@id/pending_tx_target"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="Ether transfer" />
+
+    <TextView
         android:id="@+id/pending_tx_description"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -26,7 +41,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/pending_tx_confirmations"
         app:layout_constraintStart_toEndOf="@id/pending_tx_target"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/pending_tx_value"
+        app:layout_constraintVertical_chainStyle="packed"
         tools:text="Ether transfer" />
 
     <TextView

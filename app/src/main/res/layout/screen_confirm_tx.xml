@@ -1,67 +1,146 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:tools="http://schemas.android.com/tools">
+    android:paddingBottom="8dp">
 
     <TextView
         android:id="@+id/confirm_tx_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:text="Review action"
+        android:text="Review transaction"
         android:textColor="@color/darkText"
         android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@id/confirm_tx_description"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/confirm_tx_asset_icon"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/confirm_tx_title"
+        tools:src="@color/colorPrimary" />
+
+    <TextView
+        android:id="@+id/confirm_tx_asset_label"
+        android:layout_width="0dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        android:gravity="center"
+        android:textColor="@color/darkText"
+        app:layout_constraintEnd_toStartOf="@id/confirm_tx_action_icon"
+        app:layout_constraintStart_toEndOf="@id/confirm_tx_asset_icon"
+        app:layout_constraintTop_toBottomOf="@id/confirm_tx_title"
+        tools:text="Safe management" />
+
+    <pm.gnosis.blockies.BlockiesImageView
+        android:id="@+id/confirm_tx_target_icon"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/confirm_tx_title"
+        tools:src="@color/colorPrimary" />
+
+    <TextView
+        android:id="@+id/confirm_tx_target_label"
+        android:layout_width="0dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="4dp"
+        android:gravity="center"
+        android:textColor="@color/darkText"
+        app:layout_constraintEnd_toStartOf="@id/confirm_tx_target_icon"
+        app:layout_constraintStart_toEndOf="@id/confirm_tx_action_icon"
+        app:layout_constraintTop_toBottomOf="@id/confirm_tx_title"
+        tools:text="Safe management" />
+
+    <ImageView
+        android:id="@+id/confirm_tx_action_icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="20dp"
+        android:tint="@color/colorPrimary"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/confirm_tx_title"
+        app:srcCompat="@drawable/ic_arrow_forward_24dp" />
 
     <TextView
         android:id="@+id/confirm_tx_description"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
+        android:layout_marginTop="4dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
-        android:text="Please confirm this action"
         android:textColor="@color/darkText"
-        app:layout_constraintBottom_toTopOf="@id/confirm_tx_fee_lbl"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/confirm_tx_asset_icon"
+        tools:text="Please confirm this action" />
 
     <TextView
         android:id="@+id/confirm_tx_fee_lbl"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="4dp"
-        android:layout_marginBottom="8dp"
         android:text="Network fees:"
-        app:layout_constraintBottom_toTopOf="@id/confirm_tx_submit_btn"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/confirm_tx_description" />
 
     <TextView
         android:id="@+id/confirm_tx_fee_value"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="8dp"
         android:gravity="start"
-        tools:text="123235345"
-        app:layout_constraintBottom_toTopOf="@id/confirm_tx_submit_btn"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/confirm_tx_fee_lbl" />
+        app:layout_constraintStart_toEndOf="@id/confirm_tx_fee_lbl"
+        app:layout_constraintTop_toBottomOf="@+id/confirm_tx_description"
+        tools:text="123235345" />
+
+    <ProgressBar
+        android:id="@+id/confirm_tx_confirmations_indicator"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:progressTint="@color/colorPrimary"
+        android:progressBackgroundTint="@color/transparent"
+        tools:progress="50"
+        tools:max="100"
+        app:layout_constraintTop_toBottomOf="@+id/confirm_tx_fee_lbl" />
 
     <TextView
         android:id="@+id/confirm_tx_submit_btn"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:layout_margin="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
         android:background="@drawable/primary_button"
         android:gravity="center"
         android:text="Confirm"
         android:textColor="@color/white"
         android:textSize="16sp"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/confirm_tx_confirmations_indicator" />
 </androidx.constraintlayout.widget.ConstraintLayout>

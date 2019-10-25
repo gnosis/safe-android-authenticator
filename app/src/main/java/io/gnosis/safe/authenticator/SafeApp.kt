@@ -4,10 +4,13 @@ import android.app.Application
 import com.squareup.moshi.Moshi
 import com.squareup.picasso.Picasso
 import io.gnosis.safe.authenticator.data.JsonRpcApi
+import io.gnosis.safe.authenticator.data.RelayServiceApi
 import io.gnosis.safe.authenticator.data.TransactionServiceApi
 import io.gnosis.safe.authenticator.data.adapter.*
 import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.repositories.SafeRepositoryImpl
+import io.gnosis.safe.authenticator.ui.intro.IntroContract
+import io.gnosis.safe.authenticator.ui.intro.IntroViewModel
 import io.gnosis.safe.authenticator.ui.settings.SettingsContract
 import io.gnosis.safe.authenticator.ui.settings.SettingsViewModel
 import io.gnosis.safe.authenticator.ui.transactions.*
@@ -74,6 +77,16 @@ class SafeApp : Application() {
     }
 
     private val apiModule = module {
+
+        single<RelayServiceApi> {
+            Retrofit.Builder()
+                .client(get())
+                .baseUrl(RelayServiceApi.BASE_URL)
+                .addConverterFactory(MoshiConverterFactory.create(get()))
+                .build()
+                .create(RelayServiceApi::class.java)
+        }
+
         single<TransactionServiceApi> {
             Retrofit.Builder()
                 .client(get())
@@ -101,20 +114,22 @@ class SafeApp : Application() {
     }
 
     private val repositoryModule = module {
-        single<SafeRepository> { SafeRepositoryImpl(get(), get(), get(), get(), get()) }
+        single<SafeRepository> { SafeRepositoryImpl(get(), get(), get(), get(), get(), get(), get()) }
     }
 
     @ExperimentalCoroutinesApi
     private val viewModelModule = module {
+        viewModel<IntroContract> { IntroViewModel(get()) }
         viewModel<TransactionsContract> { TransactionsViewModel(get()) }
         viewModel<SettingsContract> { SettingsViewModel(get()) }
         viewModel<NewTransactionContract> { NewTransactionViewModel(get()) }
         viewModel<TransactionConfirmationContract> { (
                                                          safe: Solidity.Address,
+                                                         transactionHash: String,
                                                          transaction: SafeRepository.SafeTx,
                                                          executionInfo: SafeRepository.SafeTxExecInfo
                                                      ) ->
-            TransactionConfirmationViewModel(safe, transaction, executionInfo, get())
+            TransactionConfirmationViewModel(safe, transactionHash, transaction, executionInfo, get())
         }
     }
 }

@@ -1,11 +1,17 @@
 package io.gnosis.safe.authenticator.repositories
 
 import android.content.Context
+import io.gnosis.safe.authenticator.Compound
 import io.gnosis.safe.authenticator.GnosisSafe
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.data.JsonRpcApi
+import io.gnosis.safe.authenticator.data.RelayServiceApi
 import io.gnosis.safe.authenticator.data.TransactionServiceApi
+import io.gnosis.safe.authenticator.data.models.ServiceTransaction
 import io.gnosis.safe.authenticator.data.models.ServiceTransactionRequest
+import io.gnosis.safe.authenticator.utils.asMiddleEllipsized
+import io.gnosis.safe.authenticator.utils.nullOnThrow
+import io.gnosis.safe.authenticator.utils.shiftedString
 import kotlinx.coroutines.rx2.await
 import okio.ByteString
 import org.walleth.khex.toHexString
@@ -16,27 +22,30 @@ import pm.gnosis.crypto.utils.Sha3Utils
 import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
 import pm.gnosis.mnemonic.Bip39
 import pm.gnosis.model.Solidity
+import pm.gnosis.svalinn.common.PreferencesManager
 import pm.gnosis.svalinn.common.utils.edit
 import pm.gnosis.svalinn.security.EncryptionManager
 import pm.gnosis.utils.*
 import java.math.BigInteger
 import java.nio.charset.Charset
-import kotlin.math.absoluteValue
 
 interface SafeRepository {
 
     suspend fun loadDeviceId(): Solidity.Address
+    suspend fun setSafeAddress(safe: Solidity.Address)
     suspend fun loadSafeAddress(): Solidity.Address
     suspend fun confirmSafeTransaction(
         safe: Solidity.Address, transaction: SafeTx, execInfo: SafeTxExecInfo
     )
+
     suspend fun loadPendingTransactions(safe: Solidity.Address): List<ServiceSafeTx>
 
     data class SafeInfo(
         val address: Solidity.Address,
         val masterCopy: Solidity.Address,
         val owners: List<Solidity.Address>,
-        val threshold: BigInteger
+        val threshold: BigInteger,
+        val currentNonce: BigInteger
     )
 
     data class ServiceSafeTx(
@@ -71,8 +80,26 @@ interface SafeRepository {
         val fees by lazy { (baseGas + txGas) * gasPrice }
     }
 
+    data class TokenInfo(
+        val symbol: String,
+        val decimals: Int,
+        val name: String,
+        val icon: String?
+    )
+
+    data class TransactionInfo(
+        val recipient: Solidity.Address,
+        val recipientLabel: String,
+        val assetIcon: String?,
+        val assetLabel: String,
+        val additionalInfo: String? = null
+    )
+
     suspend fun loadSafeNonce(safe: Solidity.Address): BigInteger
     suspend fun loadSafeInfo(safe: Solidity.Address): SafeInfo
+    suspend fun loadTokenInfo(token: Solidity.Address): TokenInfo
+    suspend fun loadPendingTransaction(txHash: String): ServiceSafeTx
+    suspend fun loadTransactionInformation(safe: Solidity.Address, transaction: SafeTx): TransactionInfo
 }
 
 class SafeRepositoryImpl(
@@ -80,7 +107,9 @@ class SafeRepositoryImpl(
     private val bip39: Bip39,
     private val encryptionManager: EncryptionManager,
     private val jsonRpcApi: JsonRpcApi,
-    private val transactionServiceApi: TransactionServiceApi
+    private val relayServiceApi: RelayServiceApi,
+    private val transactionServiceApi: TransactionServiceApi,
+    private val preferencesManager: PreferencesManager
 ) : SafeRepository {
 
     private val accountPrefs = context.getSharedPreferences(ACC_PREF_NAME, Context.MODE_PRIVATE)
@@ -93,7 +122,14 @@ class SafeRepositoryImpl(
             throw RuntimeException("Could not setup encryption")
     }
 
-    override suspend fun loadSafeAddress(): Solidity.Address = "0x3C8e177699560622B051DADEEE2CE4B3264a16C3".asEthereumAddress()!!
+    override suspend fun setSafeAddress(safe: Solidity.Address) {
+        preferencesManager.prefs.edit {
+            putString(PREF_KEY_SAFE_ADDRESS, safe.asEthereumAddressString())
+        }
+    }
+
+    override suspend fun loadSafeAddress(): Solidity.Address =
+        preferencesManager.prefs.getString(PREF_KEY_SAFE_ADDRESS, null)!!.asEthereumAddress()!!
 
     override suspend fun loadDeviceId(): Solidity.Address {
         enforceEncryption()
@@ -116,6 +152,19 @@ class SafeRepositoryImpl(
         val seed = bip39.mnemonicToSeed(loadMnemonic())
         val hdNode = KeyGenerator.masterNode(ByteString.of(*seed))
         return hdNode.derive(KeyGenerator.BIP44_PATH_ETHEREUM).deriveChild(index).keyPair
+    }
+
+    // TODO: optimize
+    private val cachedTokenInfo = HashMap<Solidity.Address, SafeRepository.TokenInfo>()
+
+    override suspend fun loadTokenInfo(token: Solidity.Address): SafeRepository.TokenInfo {
+        return cachedTokenInfo[token] ?: run {
+            relayServiceApi.tokenInfo(token.asEthereumAddressChecksumString()).let {
+                SafeRepository.TokenInfo(it.symbol, it.decimals, it.name, it.logoUri).apply {
+                    cachedTokenInfo[token] = this
+                }
+            }
+        }
     }
 
     override suspend fun loadSafeInfo(safe: Solidity.Address): SafeRepository.SafeInfo {
@@ -145,13 +194,24 @@ class SafeRepositoryImpl(
                             "data" to GnosisSafe.GetThreshold.encode()
                         ), "latest"
                     )
+                ),
+                JsonRpcApi.JsonRpcRequest(
+                    id = 3,
+                    method = "eth_call",
+                    params = listOf(
+                        mapOf(
+                            "to" to safe,
+                            "data" to GnosisSafe.Nonce.encode()
+                        ), "latest"
+                    )
                 )
             )
         )
         val masterCopy = responses[0].result!!.asEthereumAddress()!!
         val owners = GnosisSafe.GetOwners.decode(responses[1].result!!).param0.items
         val threshold = GnosisSafe.GetThreshold.decode(responses[2].result!!).param0.value
-        return SafeRepository.SafeInfo(safe, masterCopy, owners, threshold)
+        val nonce = GnosisSafe.Nonce.decode(responses[3].result!!).param0.value
+        return SafeRepository.SafeInfo(safe, masterCopy, owners, threshold, nonce)
     }
 
     override suspend fun loadSafeNonce(safe: Solidity.Address): BigInteger {
@@ -170,35 +230,87 @@ class SafeRepositoryImpl(
         ).param0.value
     }
 
-    override suspend fun loadPendingTransactions(safe: Solidity.Address): List<SafeRepository.ServiceSafeTx> {
-        //val currentNonce = loadSafeNonce(safe)
-        val transactions = transactionServiceApi.loadTransactions(safe.asEthereumAddressChecksumString())
-        return transactions.results.mapNotNull {
-            val nonce = it.nonce.decimalAsBigInteger()
-            //if (it.isExecuted || nonce == null || nonce < currentNonce) return@mapNotNull null
-            SafeRepository.ServiceSafeTx(
-                hash = it.safeTxHash,
-                tx = SafeRepository.SafeTx(
-                    to = it.to?.asEthereumAddress() ?: Solidity.Address(BigInteger.ZERO),
-                    value = it.value.decimalAsBigIntegerOrNull() ?: BigInteger.ZERO,
-                    data = it.data ?: "",
-                    operation = it.operation.toOperation()
-                ),
-                execInfo = SafeRepository.SafeTxExecInfo(
-                    baseGas = it.baseGas.decimalAsBigIntegerOrNull() ?: BigInteger.ZERO,
-                    txGas = it.safeTxGas.decimalAsBigIntegerOrNull() ?: BigInteger.ZERO,
-                    gasPrice = it.gasPrice.decimalAsBigIntegerOrNull() ?: BigInteger.ZERO,
-                    gasToken = it.gasToken?.asEthereumAddress() ?: Solidity.Address(BigInteger.ZERO),
-                    refundReceiver = it.refundReceiver?.asEthereumAddress() ?: Solidity.Address(BigInteger.ZERO),
-                    nonce = nonce
-                ),
-                confirmations = it.confirmations.map { confirmation ->
-                    confirmation.owner.asEthereumAddress()!! to confirmation.signature
-                },
-                executed = it.isExecuted
-            )
+    override suspend fun loadPendingTransactions(safe: Solidity.Address): List<SafeRepository.ServiceSafeTx> =
+        transactionServiceApi.loadTransactions(safe.asEthereumAddressChecksumString()).results.map { it.toLocal() }
+
+    override suspend fun loadPendingTransaction(txHash: String): SafeRepository.ServiceSafeTx =
+        transactionServiceApi.loadTransaction(txHash).toLocal()
+
+    override suspend fun loadTransactionInformation(safe: Solidity.Address, transaction: SafeRepository.SafeTx) =
+        when {
+            transaction.to == safe && transaction.data.removeHexPrefix().isBlank() && transaction.value == BigInteger.ZERO -> {// Safe management
+                SafeRepository.TransactionInfo(
+                    recipient = transaction.to,
+                    recipientLabel = transaction.to.asEthereumAddressChecksumString().asMiddleEllipsized(4),
+                    assetIcon = "local::settings",
+                    assetLabel = "Cancel transaction"
+                )
+            }
+            transaction.to == safe && transaction.value == BigInteger.ZERO -> {// Safe management
+                SafeRepository.TransactionInfo(
+                    recipient = transaction.to,
+                    recipientLabel = transaction.to.asEthereumAddressChecksumString().asMiddleEllipsized(4),
+                    assetIcon = "local::settings",
+                    assetLabel = "Safe management"
+                )
+            }
+            transaction.data.isSolidityMethod(Compound.Transfer.METHOD_ID) -> { // Token transfer
+                val transferArgs = Compound.Transfer.decodeArguments(transaction.data.removeSolidityMethodPrefix(Compound.Transfer.METHOD_ID))
+                val tokenInfo = nullOnThrow { loadTokenInfo(transaction.to) }
+                val symbol = tokenInfo?.symbol ?: transaction.to.asEthereumAddressChecksumString().asMiddleEllipsized(4)
+                SafeRepository.TransactionInfo(
+                    recipient = transferArgs.dst,
+                    recipientLabel = transferArgs.dst.asEthereumAddressChecksumString().asMiddleEllipsized(4),
+                    assetIcon = tokenInfo?.icon,
+                    assetLabel = "${transferArgs.amount.value.shiftedString(tokenInfo?.decimals ?: 0)} $symbol",
+                    additionalInfo = "Token transfer"
+                )
+            }
+            transaction.data.isSolidityMethod(Compound.Approve.METHOD_ID) -> { // Token transfer
+                val approveArgs = Compound.Approve.decodeArguments(transaction.data.removeSolidityMethodPrefix(Compound.Transfer.METHOD_ID))
+                val tokenInfo = nullOnThrow { loadTokenInfo(transaction.to) }
+                val symbol = tokenInfo?.symbol ?: transaction.to.asEthereumAddressChecksumString().asMiddleEllipsized(4)
+                SafeRepository.TransactionInfo(
+                    recipient = approveArgs.spender,
+                    recipientLabel = approveArgs.spender.asEthereumAddressChecksumString().asMiddleEllipsized(4),
+                    assetIcon = tokenInfo?.icon,
+                    assetLabel = "Approve ${approveArgs.amount.value.shiftedString(tokenInfo?.decimals ?: 0)} $symbol",
+                    additionalInfo = "Token approval"
+                )
+            }
+            else -> // ETH transfer
+                SafeRepository.TransactionInfo(
+                    recipient = transaction.to,
+                    recipientLabel = transaction.to.asEthereumAddressChecksumString().asMiddleEllipsized(4),
+                    assetIcon = "local::ethereum",
+                    assetLabel = "${transaction.value.shiftedString(18)} ETH",
+                    additionalInfo = if (transaction.data.removeHexPrefix().isBlank()) null else "Contract interaction (${transaction.data.length / 2 - 1} bytes)"
+                )
+
         }
-    }
+
+    private fun ServiceTransaction.toLocal() =
+        SafeRepository.ServiceSafeTx(
+            hash = safeTxHash,
+            tx = SafeRepository.SafeTx(
+                to = to?.asEthereumAddress() ?: Solidity.Address(BigInteger.ZERO),
+                value = value.decimalAsBigIntegerOrNull() ?: BigInteger.ZERO,
+                data = data ?: "",
+                operation = operation.toOperation()
+            ),
+            execInfo = SafeRepository.SafeTxExecInfo(
+                baseGas = baseGas.decimalAsBigIntegerOrNull() ?: BigInteger.ZERO,
+                txGas = safeTxGas.decimalAsBigIntegerOrNull() ?: BigInteger.ZERO,
+                gasPrice = gasPrice.decimalAsBigIntegerOrNull() ?: BigInteger.ZERO,
+                gasToken = gasToken?.asEthereumAddress() ?: Solidity.Address(BigInteger.ZERO),
+                refundReceiver = refundReceiver?.asEthereumAddress() ?: Solidity.Address(BigInteger.ZERO),
+                nonce = nonce.decimalAsBigInteger()
+            ),
+            confirmations = confirmations.map { confirmation ->
+                confirmation.owner.asEthereumAddress()!! to confirmation.signature
+            },
+            executed = isExecuted
+        )
 
     override suspend fun confirmSafeTransaction(
         safe: Solidity.Address,
@@ -330,6 +442,7 @@ class SafeRepositoryImpl(
         private const val ACC_PREF_NAME = "AccountRepositoryImpl_Preferences"
 
         private const val PREF_KEY_APP_MNEMONIC = "accounts.string.app_menmonic"
+        private const val PREF_KEY_SAFE_ADDRESS = "accounts.string.safe_address"
 
         private const val ENC_PASSWORD = "ThisShouldNotBeHardcoded"
     }

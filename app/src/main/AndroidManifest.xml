@@ -14,7 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".ui.transactions.TransactionsActivity"
+            android:name=".ui.intro.IntroActivity"
             android:launchMode="singleTop"
             android:screenOrientation="portrait">
             <intent-filter>
@@ -24,8 +24,13 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".ui.transactions.TransactionsActivity"
+            android:screenOrientation="portrait"/>
+        <activity
             android:name=".ui.settings.SettingsActivity"
             android:screenOrientation="portrait" />
-        <activity android:name=".ui.transactions.NewTransactionActivity" />
+        <activity
+            android:name=".ui.transactions.NewTransactionActivity"
+            android:screenOrientation="portrait" />
     </application>
 </manifest>

@@ -6,11 +6,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.lifecycle.liveData
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.squareup.picasso.Picasso
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.ui.base.BaseActivity
@@ -18,11 +20,14 @@ import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
 import io.gnosis.safe.authenticator.ui.settings.SettingsActivity
 import io.gnosis.safe.authenticator.utils.asMiddleEllipsized
+import io.gnosis.safe.authenticator.utils.nullOnThrow
 import kotlinx.android.synthetic.main.item_pending_tx.view.*
 import kotlinx.android.synthetic.main.screen_transactions.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import pm.gnosis.model.Solidity
+import pm.gnosis.utils.removeHexPrefix
 
 @ExperimentalCoroutinesApi
 abstract class TransactionsContract : LoadingViewModel<TransactionsContract.State>() {
@@ -38,7 +43,8 @@ abstract class TransactionsContract : LoadingViewModel<TransactionsContract.Stat
 
     data class TransactionMeta(
         val hash: String,
-        val info: SafeRepository.SafeTx,
+        val info: SafeRepository.TransactionInfo?,
+        val tx: SafeRepository.SafeTx,
         val execInfo: SafeRepository.SafeTxExecInfo,
         val state: State
     ) {
@@ -70,13 +76,14 @@ class TransactionsViewModel(
             val deviceId = safeRepository.loadDeviceId()
             val nonce = safeRepository.loadSafeNonce(safe)
             val transactions = txs.map {
+                val transactionInfo = nullOnThrow { safeRepository.loadTransactionInformation(safe, it.tx) }
                 val txState = when {
                     it.executed -> TransactionMeta.State.EXECUTED
                     it.execInfo.nonce < nonce -> TransactionMeta.State.CANCELED
                     it.confirmations.find { (address, _) -> address == deviceId } != null -> TransactionMeta.State.CONFIRMED
                     else -> TransactionMeta.State.PENDING
                 }
-                TransactionMeta(it.hash, it.tx, it.execInfo, txState)
+                TransactionMeta(it.hash, transactionInfo, it.tx, it.execInfo, txState)
             }
             updateState { copy(loading = false, safe = safe, transactions = transactions) }
         }
@@ -129,21 +136,21 @@ class TransactionsActivity : BaseActivity<TransactionsContract.State, Transactio
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(safe: Solidity.Address?, item: TransactionsContract.TransactionMeta) {
-            if (item.state != TransactionsContract.TransactionMeta.State.PENDING)
-                itemView.setOnClickListener(null)
-            else
-                itemView.setOnClickListener {
-                    safe ?: return@setOnClickListener
-                    TransactionConfirmationDialog(this@TransactionsActivity, safe, item.info, item.execInfo).show()
-                }
-            itemView.pending_tx_target.setAddress(item.info.to)
-            itemView.pending_tx_confirmations.text = when(item.state) {
+            itemView.setOnClickListener {
+                safe ?: return@setOnClickListener
+                TransactionConfirmationDialog(this@TransactionsActivity, safe, item.hash, item.tx, item.execInfo).show()
+            }
+            itemView.pending_tx_target.setAddress(item.info?.recipient ?: item.tx.to)
+            itemView.pending_tx_confirmations.text = when (item.state) {
                 TransactionsContract.TransactionMeta.State.EXECUTED -> "Executed"
                 TransactionsContract.TransactionMeta.State.CANCELED -> "Canceled"
                 TransactionsContract.TransactionMeta.State.CONFIRMED -> "Confirmed"
                 TransactionsContract.TransactionMeta.State.PENDING -> "Pending"
             }
-            itemView.pending_tx_description.text = item.hash.asMiddleEllipsized(6)
+            itemView.pending_tx_value.text =
+                item.info?.assetLabel ?: if (item.tx.data.removeHexPrefix().isBlank()) "ETH transfer" else "Contract interaction"
+            itemView.pending_tx_description.text = item.info?.additionalInfo
+            itemView.pending_tx_description.isVisible = item.info?.additionalInfo != null
         }
     }
 
