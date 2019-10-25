@@ -11,6 +11,6 @@
     <color name="transparent">#00000000</color>
     <color name="mediumGrey">#b2b5b2</color>
     <color name="pressedShade">#33000000</color>
-    <color name="ic_launcher_background">#008C73</color>
+    <color name="ic_launcher_background">#EFEFEF</color>
     <color name="secondaryHeader">#19252223</color>
 </resources>
