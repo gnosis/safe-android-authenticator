@@ -18,7 +18,6 @@ import kotlinx.android.synthetic.main.screen_confirm_tx.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import org.koin.android.ext.android.getKoin
-import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ViewModelParameters
 import org.koin.androidx.viewmodel.getViewModel
 import org.koin.core.parameter.parametersOf
@@ -45,9 +44,9 @@ abstract class TransactionConfirmationContract : LoadingViewModel<TransactionCon
 @ExperimentalCoroutinesApi
 class TransactionConfirmationViewModel(
     private val safe: Solidity.Address,
-    private val transactionHash: String,
+    private val transactionHash: String?,
     private val transaction: SafeRepository.SafeTx,
-    private val executionInfo: SafeRepository.SafeTxExecInfo,
+    private val executionInfo: SafeRepository.SafeTxExecInfo?,
     private val safeRepository: SafeRepository
 ) : TransactionConfirmationContract() {
 
@@ -60,7 +59,7 @@ class TransactionConfirmationViewModel(
 
     private fun loadFees() {
         safeLaunch {
-            updateState { copy(fees = executionInfo.fees) }
+            updateState { copy(fees = executionInfo?.fees) }
         }
     }
 
@@ -75,13 +74,15 @@ class TransactionConfirmationViewModel(
         loadingLaunch {
             updateState { copy(loading = true) }
             val deviceId = safeRepository.loadDeviceId()
-            val transactionTask = async { safeRepository.loadPendingTransaction(transactionHash) }
+            val transactionTask = async { transactionHash?.let { safeRepository.loadPendingTransaction(it) } }
             val safeInfo = safeRepository.loadSafeInfo(safe)
             val transactionInfo = nullOnThrow { transactionTask.await() }
             val confirmationCount = transactionInfo?.confirmations?.size ?: 0
             val isOwner = safeInfo.owners.contains(deviceId)
             val hasConfirmed = transactionInfo?.let { it.confirmations.find { (address, _) -> address == deviceId } != null } ?: false
-            val canSubmit = isOwner && !hasConfirmed && !(transactionInfo?.executed ?: true) && executionInfo.nonce >= safeInfo.currentNonce
+            val notExecuted = transactionInfo?.executed == false || transactionHash == null
+            val txNonce = executionInfo?.nonce ?: safeInfo.currentNonce
+            val canSubmit = isOwner && !hasConfirmed && notExecuted && txNonce >= safeInfo.currentNonce
             val state = TransactionState(
                 confirmationCount, safeInfo.threshold.toInt(), canSubmit
             )
@@ -93,7 +94,18 @@ class TransactionConfirmationViewModel(
         if (currentState().loading) return
         loadingLaunch {
             updateState { copy(loading = true) }
-            safeRepository.confirmSafeTransaction(safe, transaction, executionInfo)
+            val execInfo = executionInfo ?: run {
+                val safeInfo = safeRepository.loadSafeInfo(safe)
+                SafeRepository.SafeTxExecInfo(
+                    BigInteger.ZERO,
+                    BigInteger.ZERO,
+                    BigInteger.ZERO,
+                    Solidity.Address(BigInteger.ZERO),
+                    Solidity.Address(BigInteger.ZERO),
+                    safeInfo.currentNonce
+                )
+            }
+            safeRepository.confirmSafeTransaction(safe, transaction, execInfo)
             updateState { copy(loading = false, confirmed = true) }
         }
     }
@@ -108,7 +120,7 @@ class TransactionConfirmationViewModel(
 class TransactionConfirmationDialog(
     activity: AppCompatActivity,
     safe: Solidity.Address,
-    transactionHash: String,
+    transactionHash: String?,
     transaction: SafeRepository.SafeTx,
     executionInfo: SafeRepository.SafeTxExecInfo? = null
 ) : BottomSheetDialog(activity), LifecycleOwner, ViewModelStoreOwner {
@@ -164,7 +176,8 @@ class TransactionConfirmationDialog(
                     confirm_tx_asset_icon.setBackgroundResource(R.drawable.circle_background)
                     confirm_tx_asset_icon.setImageResource(R.drawable.ic_settings_24dp)
                 }
-                it.txInfo?.assetIcon?.startsWith("local::") == true -> { }
+                it.txInfo?.assetIcon?.startsWith("local::") == true -> {
+                }
                 !it.txInfo?.assetIcon.isNullOrBlank() ->
                     picasso.load(it.txInfo!!.assetIcon).into(confirm_tx_asset_icon)
             }

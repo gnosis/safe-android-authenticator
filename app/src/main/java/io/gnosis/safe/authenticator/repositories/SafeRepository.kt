@@ -1,14 +1,17 @@
 package io.gnosis.safe.authenticator.repositories
 
 import android.content.Context
-import io.gnosis.safe.authenticator.Compound
-import io.gnosis.safe.authenticator.GnosisSafe
+import io.gnosis.safe.authenticator.*
+import io.gnosis.safe.authenticator.BuildConfig
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.data.JsonRpcApi
 import io.gnosis.safe.authenticator.data.RelayServiceApi
 import io.gnosis.safe.authenticator.data.TransactionServiceApi
+import io.gnosis.safe.authenticator.data.TransferLimitServiceApi
+import io.gnosis.safe.authenticator.data.models.LimitTransferExecution
 import io.gnosis.safe.authenticator.data.models.ServiceTransaction
 import io.gnosis.safe.authenticator.data.models.ServiceTransactionRequest
+import io.gnosis.safe.authenticator.repositories.SafeRepository.Companion.TRANSFER_LIMIT_MODULE_ADDRESS
 import io.gnosis.safe.authenticator.utils.asMiddleEllipsized
 import io.gnosis.safe.authenticator.utils.nullOnThrow
 import io.gnosis.safe.authenticator.utils.shiftedString
@@ -95,11 +98,28 @@ interface SafeRepository {
         val additionalInfo: String? = null
     )
 
+    data class Limit(
+        val token: Solidity.Address,
+        val amount: BigInteger,
+        val spent: BigInteger,
+        val lastSpent: Long,
+        val resetPeriod: Long,
+        val nonce: BigInteger
+    )
+
     suspend fun loadSafeNonce(safe: Solidity.Address): BigInteger
     suspend fun loadSafeInfo(safe: Solidity.Address): SafeInfo
     suspend fun loadTokenInfo(token: Solidity.Address): TokenInfo
     suspend fun loadPendingTransaction(txHash: String): ServiceSafeTx
     suspend fun loadTransactionInformation(safe: Solidity.Address, transaction: SafeTx): TransactionInfo
+    suspend fun performTransferLimit(safe: Solidity.Address, limit: Limit, to: Solidity.Address, amount: BigInteger)
+    suspend fun loadLimits(safe: Solidity.Address): List<Limit>
+    suspend fun loadModules(safe: Solidity.Address): List<Solidity.Address>
+
+    companion object {
+        val ETH_TOKEN_INFO = TokenInfo("ETH", 18, "Ether", null)
+        val TRANSFER_LIMIT_MODULE_ADDRESS = BuildConfig.TRANSFER_LIMIT_MODULE.asEthereumAddress()!!
+    }
 }
 
 class SafeRepositoryImpl(
@@ -109,6 +129,7 @@ class SafeRepositoryImpl(
     private val jsonRpcApi: JsonRpcApi,
     private val relayServiceApi: RelayServiceApi,
     private val transactionServiceApi: TransactionServiceApi,
+    private val transferLimitServiceApi: TransferLimitServiceApi,
     private val preferencesManager: PreferencesManager
 ) : SafeRepository {
 
@@ -152,6 +173,110 @@ class SafeRepositoryImpl(
         val seed = bip39.mnemonicToSeed(loadMnemonic())
         val hdNode = KeyGenerator.masterNode(ByteString.of(*seed))
         return hdNode.derive(KeyGenerator.BIP44_PATH_ETHEREUM).deriveChild(index).keyPair
+    }
+
+    override suspend fun loadModules(safe: Solidity.Address): List<Solidity.Address> =
+        jsonRpcApi.post(
+            JsonRpcApi.JsonRpcRequest(
+                method = "eth_call",
+                params = listOf(
+                    mapOf(
+                        "to" to safe,
+                        "data" to GnosisSafe.GetModules.encode()
+                    ),
+                    "latest"
+                )
+            )
+        ).result!!.let { GnosisSafe.GetModules.decode(it).param0.items }
+
+    override suspend fun loadLimits(safe: Solidity.Address): List<SafeRepository.Limit> {
+        val tokensResp = jsonRpcApi.post(
+            JsonRpcApi.JsonRpcRequest(
+                method = "eth_call",
+                params = listOf(
+                    mapOf(
+                        "to" to TRANSFER_LIMIT_MODULE_ADDRESS,
+                        "data" to TransferLimitModule.GetTokens.encode(safe)
+                    ),
+                    "latest"
+                )
+            )
+        ).result!!
+        val tokens = TransferLimitModule.GetTokens.decode(tokensResp).param0.items
+        return jsonRpcApi.post(
+            tokens.mapIndexed { index, address ->
+                JsonRpcApi.JsonRpcRequest(
+                    id = index,
+                    method = "eth_call",
+                    params = listOf(
+                        mapOf(
+                            "to" to TRANSFER_LIMIT_MODULE_ADDRESS,
+                            "data" to TransferLimitModule.GetTokenLimit.encode(safe, address)
+                        ),
+                        "latest"
+                    )
+                )
+            }
+        ).map { resp ->
+            TransferLimitModule.GetTokenLimit.decode(resp.result!!).param0.items.let {
+                SafeRepository.Limit(
+                    token = tokens[resp.id],
+                    amount = it[0].value,
+                    spent = it[1].value,
+                    lastSpent = it[2].value.toLong(),
+                    resetPeriod = it[3].value.toLong(),
+                    nonce = it[4].value
+                )
+            }
+        }
+
+    }
+
+    private suspend fun getTransferLimitHash(
+        safe: Solidity.Address,
+        token: Solidity.Address,
+        to: Solidity.Address,
+        amount: BigInteger,
+        paymentToken: Solidity.Address,
+        payment: BigInteger,
+        nonce: BigInteger
+    ) = jsonRpcApi.post(
+        JsonRpcApi.JsonRpcRequest(
+            method = "eth_call",
+            params = listOf(
+                mapOf(
+                    "to" to TRANSFER_LIMIT_MODULE_ADDRESS,
+                    "data" to TransferLimitModule.GenerateTransferHash.encode(
+                        safe,
+                        token,
+                        to,
+                        Solidity.UInt96(amount),
+                        paymentToken,
+                        Solidity.UInt96(payment),
+                        Solidity.UInt16(nonce)
+                    )
+                ),
+                "latest"
+            )
+        )
+    ).result!!.let {
+        TransferLimitModule.GenerateTransferHash.decode(it).param0.bytes
+    }
+
+    override suspend fun performTransferLimit(safe: Solidity.Address, limit: SafeRepository.Limit, to: Solidity.Address, amount: BigInteger) {
+        val transferLimitHash = getTransferLimitHash(safe, limit.token, to, amount, Solidity.Address(BigInteger.ZERO), BigInteger.ZERO, limit.nonce)
+        val keyPair = getKeyPair()
+        val signature = keyPair.sign(transferLimitHash)
+        val hash = transferLimitServiceApi.executeLimitTransfer(
+            safe.asEthereumAddressChecksumString(),
+            limit.token.asEthereumAddressChecksumString(),
+            LimitTransferExecution(
+                to,
+                amount,
+                signature.toSignatureString().addHexPrefix()
+            )
+        )
+        print(hash)
     }
 
     // TODO: optimize

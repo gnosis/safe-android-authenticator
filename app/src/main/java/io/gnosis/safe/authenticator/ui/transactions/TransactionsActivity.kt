@@ -12,19 +12,16 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.squareup.picasso.Picasso
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.ui.base.BaseActivity
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
 import io.gnosis.safe.authenticator.ui.settings.SettingsActivity
-import io.gnosis.safe.authenticator.utils.asMiddleEllipsized
 import io.gnosis.safe.authenticator.utils.nullOnThrow
 import kotlinx.android.synthetic.main.item_pending_tx.view.*
 import kotlinx.android.synthetic.main.screen_transactions.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import pm.gnosis.model.Solidity
 import pm.gnosis.utils.removeHexPrefix
@@ -38,8 +35,7 @@ abstract class TransactionsContract : LoadingViewModel<TransactionsContract.Stat
         val safe: Solidity.Address?,
         val transactions: List<TransactionMeta>,
         override var viewAction: ViewAction?
-    ) :
-        BaseViewModel.State
+    ) : BaseViewModel.State
 
     data class TransactionMeta(
         val hash: String,
@@ -114,7 +110,7 @@ class TransactionsActivity : BaseActivity<TransactionsContract.State, Transactio
             startActivity(SettingsActivity.createIntent(this))
         }
         transactions_add_tx_btn.setOnClickListener {
-            startActivity(NewTransactionActivity.createIntent(this))
+            startActivity(LimitTransferActivity.createIntent(this))
         }
     }
 

@@ -6,11 +6,14 @@ import com.squareup.picasso.Picasso
 import io.gnosis.safe.authenticator.data.JsonRpcApi
 import io.gnosis.safe.authenticator.data.RelayServiceApi
 import io.gnosis.safe.authenticator.data.TransactionServiceApi
+import io.gnosis.safe.authenticator.data.TransferLimitServiceApi
 import io.gnosis.safe.authenticator.data.adapter.*
 import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.repositories.SafeRepositoryImpl
 import io.gnosis.safe.authenticator.ui.intro.IntroContract
 import io.gnosis.safe.authenticator.ui.intro.IntroViewModel
+import io.gnosis.safe.authenticator.ui.settings.ManageLimitTransferContract
+import io.gnosis.safe.authenticator.ui.settings.ManageLimitTransferViewModel
 import io.gnosis.safe.authenticator.ui.settings.SettingsContract
 import io.gnosis.safe.authenticator.ui.settings.SettingsViewModel
 import io.gnosis.safe.authenticator.ui.transactions.*
@@ -96,6 +99,15 @@ class SafeApp : Application() {
                 .create(TransactionServiceApi::class.java)
         }
 
+        single<TransferLimitServiceApi> {
+            Retrofit.Builder()
+                .client(get())
+                .baseUrl(TransferLimitServiceApi.BASE_URL)
+                .addConverterFactory(MoshiConverterFactory.create(get()))
+                .build()
+                .create(TransferLimitServiceApi::class.java)
+        }
+
         single<JsonRpcApi> {
             val baseClient: OkHttpClient = get()
             val client = baseClient.newBuilder().addInterceptor {
@@ -114,7 +126,7 @@ class SafeApp : Application() {
     }
 
     private val repositoryModule = module {
-        single<SafeRepository> { SafeRepositoryImpl(get(), get(), get(), get(), get(), get(), get()) }
+        single<SafeRepository> { SafeRepositoryImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
     }
 
     @ExperimentalCoroutinesApi
@@ -123,11 +135,13 @@ class SafeApp : Application() {
         viewModel<TransactionsContract> { TransactionsViewModel(get()) }
         viewModel<SettingsContract> { SettingsViewModel(get()) }
         viewModel<NewTransactionContract> { NewTransactionViewModel(get()) }
+        viewModel<ManageLimitTransferContract> { ManageLimitTransferViewModel(get()) }
+        viewModel<LimitTransferContract> { LimitTransferViewModel(get()) }
         viewModel<TransactionConfirmationContract> { (
                                                          safe: Solidity.Address,
-                                                         transactionHash: String,
+                                                         transactionHash: String?,
                                                          transaction: SafeRepository.SafeTx,
-                                                         executionInfo: SafeRepository.SafeTxExecInfo
+                                                         executionInfo: SafeRepository.SafeTxExecInfo?
                                                      ) ->
             TransactionConfirmationViewModel(safe, transactionHash, transaction, executionInfo, get())
         }
