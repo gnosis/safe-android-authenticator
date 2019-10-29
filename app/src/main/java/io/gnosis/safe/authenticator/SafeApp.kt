@@ -12,10 +12,7 @@ import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.repositories.SafeRepositoryImpl
 import io.gnosis.safe.authenticator.ui.intro.IntroContract
 import io.gnosis.safe.authenticator.ui.intro.IntroViewModel
-import io.gnosis.safe.authenticator.ui.settings.ManageLimitTransferContract
-import io.gnosis.safe.authenticator.ui.settings.ManageLimitTransferViewModel
-import io.gnosis.safe.authenticator.ui.settings.SettingsContract
-import io.gnosis.safe.authenticator.ui.settings.SettingsViewModel
+import io.gnosis.safe.authenticator.ui.settings.*
 import io.gnosis.safe.authenticator.ui.transactions.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import okhttp3.OkHttpClient
@@ -135,6 +132,7 @@ class SafeApp : Application() {
         viewModel<TransactionsContract> { TransactionsViewModel(get()) }
         viewModel<SettingsContract> { SettingsViewModel(get()) }
         viewModel<NewTransactionContract> { NewTransactionViewModel(get()) }
+        viewModel<SetTransferLimitContract> { SetTransferLimitViewModel(get()) }
         viewModel<ManageLimitTransferContract> { ManageLimitTransferViewModel(get()) }
         viewModel<LimitTransferContract> { LimitTransferViewModel(get()) }
         viewModel<TransactionConfirmationContract> { (

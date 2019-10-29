@@ -109,6 +109,14 @@ class ManageLimitTransferActivity : BaseActivity<ManageLimitTransferContract.Sta
         manage_limit_transfer_refresh.setOnRefreshListener {
             viewModel.loadLimits()
         }
+        manage_limit_transfer_add_btn.setOnClickListener {
+            startActivity(SetTransferLimitActivity.createIntent(this))
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.loadLimits()
     }
 
     override fun updateState(state: ManageLimitTransferContract.State) {
