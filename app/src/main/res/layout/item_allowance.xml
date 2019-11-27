@@ -7,7 +7,7 @@
     android:background="@drawable/selectable_background">
 
     <ImageView
-        android:id="@+id/transfer_limit_target"
+        android:id="@+id/allowance_target"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginStart="24dp"
@@ -17,7 +17,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/transfer_limit_token"
+        android:id="@+id/allowance_token"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -25,15 +25,15 @@
         android:gravity="start"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/transfer_limit_amount"
-        app:layout_constraintStart_toEndOf="@id/transfer_limit_target"
+        app:layout_constraintEnd_toStartOf="@id/allowance_amount"
+        app:layout_constraintStart_toEndOf="@id/allowance_target"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="packed"
         app:layout_goneMarginStart="24dp"
         tools:text="Ether transfer" />
 
     <TextView
-        android:id="@+id/transfer_limit_amount"
+        android:id="@+id/allowance_amount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="24dp"

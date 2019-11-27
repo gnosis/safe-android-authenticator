@@ -4,15 +4,14 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.lifecycle.liveData
+import io.gnosis.safe.authenticator.AllowanceModule
 import io.gnosis.safe.authenticator.R
-import io.gnosis.safe.authenticator.TransferLimitModule
 import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.ui.base.BaseActivity
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
 import io.gnosis.safe.authenticator.ui.transactions.TransactionConfirmationDialog
-import kotlinx.android.synthetic.main.screen_new_transaction.*
-import kotlinx.android.synthetic.main.screen_set_transfer_limit.*
+import kotlinx.android.synthetic.main.screen_set_allowance.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import pm.gnosis.model.Solidity
@@ -20,10 +19,10 @@ import pm.gnosis.utils.*
 import java.math.BigInteger
 
 @ExperimentalCoroutinesApi
-abstract class SetTransferLimitContract : LoadingViewModel<SetTransferLimitContract.State>() {
-    abstract fun setTransferLimit(
+abstract class SetAllowanceContract : LoadingViewModel<SetAllowanceContract.State>() {
+    abstract fun setAllowance(
         token: String,
-        limit: String,
+        allowance: String,
         resetPeriod: String
     )
 
@@ -36,31 +35,32 @@ abstract class SetTransferLimitContract : LoadingViewModel<SetTransferLimitContr
 }
 
 @ExperimentalCoroutinesApi
-class SetTransferLimitViewModel(
+class SetAllowanceViewModel(
     private val safeRepository: SafeRepository
-) : SetTransferLimitContract() {
+) : SetAllowanceContract() {
 
     override val state = liveData {
         for (event in stateChannel.openSubscription()) emit(event)
     }
 
-    override fun setTransferLimit(
+    override fun setAllowance(
         token: String,
-        limit: String,
+        allowance: String,
         resetPeriod: String
     ) {
         if (currentState().loading) return
         loadingLaunch {
             updateState { copy(loading = true) }
             val safe = safeRepository.loadSafeAddress()
+            val deviceId = safeRepository.loadDeviceId()
             val tokenAddress = token.asEthereumAddress()!!
-            val limitValue = limit.decimalAsBigInteger()
+            val allowanceValue = allowance.decimalAsBigInteger()
             val resetPeriodValue = resetPeriod.decimalAsBigInteger()
-            val setLimitData = TransferLimitModule.SetLimit.encode(
-                tokenAddress, Solidity.UInt96(limitValue), Solidity.UInt16(resetPeriodValue)
+            val setAllowanceData = AllowanceModule.SetAllowance.encode(
+                deviceId, tokenAddress, Solidity.UInt96(allowanceValue), Solidity.UInt16(resetPeriodValue)
             )
             val tx = SafeRepository.SafeTx(
-                SafeRepository.TRANSFER_LIMIT_MODULE_ADDRESS, BigInteger.ZERO, setLimitData, SafeRepository.SafeTx.Operation.CALL
+                SafeRepository.ALLOWANCE_MODULE_ADDRESS, BigInteger.ZERO, setAllowanceData, SafeRepository.SafeTx.Operation.CALL
             )
             updateState { copy(loading = false, viewAction = ConfirmTransaction(safe, tx)) }
         }
@@ -73,30 +73,30 @@ class SetTransferLimitViewModel(
 }
 
 @ExperimentalCoroutinesApi
-class SetTransferLimitActivity : BaseActivity<SetTransferLimitContract.State, SetTransferLimitContract>(), TransactionConfirmationDialog.Callback {
+class SetAllowanceActivity : BaseActivity<SetAllowanceContract.State, SetAllowanceContract>(), TransactionConfirmationDialog.Callback {
 
-    override val viewModel: SetTransferLimitContract by viewModel()
+    override val viewModel: SetAllowanceContract by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.screen_set_transfer_limit)
-        set_transfer_limit_back_btn.setOnClickListener { onBackPressed() }
-        set_transfer_limit_submit_btn.setOnClickListener {
-            viewModel.setTransferLimit(
-                set_transfer_limit_token_input.text.toString(),
-                set_transfer_limit_amount_input.text.toString(),
-                set_transfer_limit_period_input.text.toString()
+        setContentView(R.layout.screen_set_allowance)
+        set_allowance_back_btn.setOnClickListener { onBackPressed() }
+        set_allowance_submit_btn.setOnClickListener {
+            viewModel.setAllowance(
+                set_allowance_token_input.text.toString(),
+                set_allowance_amount_input.text.toString(),
+                set_allowance_period_input.text.toString()
             )
         }
     }
 
-    override fun updateState(state: SetTransferLimitContract.State) {
-        set_transfer_limit_submit_btn.isEnabled = !state.loading
+    override fun updateState(state: SetAllowanceContract.State) {
+        set_allowance_submit_btn.isEnabled = !state.loading
     }
 
     override fun performAction(viewAction: BaseViewModel.ViewAction) {
         when (viewAction) {
-           is SetTransferLimitContract.ConfirmTransaction ->
+           is SetAllowanceContract.ConfirmTransaction ->
                TransactionConfirmationDialog(this, viewAction.safe, null, viewAction.tx, null).show()
             else -> super.performAction(viewAction)
         }
@@ -107,7 +107,7 @@ class SetTransferLimitActivity : BaseActivity<SetTransferLimitContract.State, Se
     }
 
     companion object {
-        fun createIntent(context: Context) = Intent(context, SetTransferLimitActivity::class.java)
+        fun createIntent(context: Context) = Intent(context, SetAllowanceActivity::class.java)
     }
 
 }

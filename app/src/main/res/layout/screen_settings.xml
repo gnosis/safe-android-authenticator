@@ -79,7 +79,7 @@
         app:layout_constraintTop_toBottomOf="@id/settings_header_bg" />
 
     <View
-        android:id="@+id/settings_manage_limit_transfer_module_divider"
+        android:id="@+id/settings_manage_allowance_module_divider"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginStart="32dp"
@@ -88,7 +88,7 @@
         app:layout_constraintTop_toBottomOf="@id/settings_device_id_txt" />
 
     <TextView
-        android:id="@+id/settings_manage_limit_transfer_module_txt"
+        android:id="@+id/settings_manage_allowance_module_txt"
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:background="@drawable/selectable_background"
@@ -97,8 +97,8 @@
         android:paddingEnd="16dp"
         android:textColor="@color/darkText"
         android:textSize="24sp"
-        android:text="Manage transfer limit"
-        app:layout_constraintTop_toBottomOf="@id/settings_manage_limit_transfer_module_divider" />
+        android:text="Manage allowances"
+        app:layout_constraintTop_toBottomOf="@id/settings_manage_allowance_module_divider" />
 
     <View
         android:id="@+id/settings_custom_tx_divider"
@@ -107,7 +107,7 @@
         android:layout_marginStart="32dp"
         android:layout_marginEnd="32dp"
         android:background="@color/divider"
-        app:layout_constraintTop_toBottomOf="@id/settings_manage_limit_transfer_module_txt" />
+        app:layout_constraintTop_toBottomOf="@id/settings_manage_allowance_module_txt" />
 
     <TextView
         android:id="@+id/settings_custom_tx_txt"

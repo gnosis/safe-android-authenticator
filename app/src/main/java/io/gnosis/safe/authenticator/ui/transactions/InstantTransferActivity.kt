@@ -11,7 +11,7 @@ import io.gnosis.safe.authenticator.ui.base.BaseActivity
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
 import io.gnosis.safe.authenticator.utils.shiftedString
-import kotlinx.android.synthetic.main.screen_limit_transfer.*
+import kotlinx.android.synthetic.main.screen_instant_transfer.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import pm.gnosis.model.Solidity
@@ -20,24 +20,24 @@ import java.math.BigDecimal
 import java.math.BigInteger
 
 @ExperimentalCoroutinesApi
-abstract class LimitTransferContract : LoadingViewModel<LimitTransferContract.State>() {
-    abstract fun submitLimitTransfer(
-        limit: WrappedLimit?,
+abstract class InstantTransferContract : LoadingViewModel<InstantTransferContract.State>() {
+    abstract fun submitInstantTransfer(
+        allowance: WrappedAllowance?,
         to: String,
         value: String
     )
 
     data class State(
         val loading: Boolean,
-        val limits: List<WrappedLimit>,
+        val allowances: List<WrappedAllowance>,
         val done: Boolean,
         override var viewAction: ViewAction?
     ) : BaseViewModel.State
 
-    data class WrappedLimit(
+    data class WrappedAllowance(
         val label: String,
         val tokenInfo: SafeRepository.TokenInfo,
-        val limit: SafeRepository.Limit
+        val allowance: SafeRepository.Allowance
     ) {
         override fun toString(): String {
             return label
@@ -46,17 +46,17 @@ abstract class LimitTransferContract : LoadingViewModel<LimitTransferContract.St
 }
 
 @ExperimentalCoroutinesApi
-class LimitTransferViewModel(
+class InstantTransferViewModel(
     private val safeRepository: SafeRepository
-) : LimitTransferContract() {
+) : InstantTransferContract() {
 
     override val state = liveData {
-        loadLimits()
+        loadAllowances()
         for (event in stateChannel.openSubscription()) emit(event)
     }
 
-    override fun submitLimitTransfer(
-        limit: WrappedLimit?,
+    override fun submitInstantTransfer(
+        allowance: WrappedAllowance?,
         to: String,
         value: String
     ) {
@@ -64,23 +64,24 @@ class LimitTransferViewModel(
         loadingLaunch {
             updateState { copy(loading = true) }
             val safe = safeRepository.loadSafeAddress()
+            val deviceId = safeRepository.loadDeviceId()
             val toAddress = to.asEthereumAddress() ?: throw IllegalArgumentException("Invalid address provided!")
-            val valueNumber = value.toBigDecimal().multiply(BigDecimal.TEN.pow(limit!!.tokenInfo.decimals)).toBigInteger()
-            safeRepository.performTransferLimit(safe, limit.limit, toAddress, valueNumber)
+            val valueNumber = value.toBigDecimal().multiply(BigDecimal.TEN.pow(allowance!!.tokenInfo.decimals)).toBigInteger()
+            safeRepository.performInstantTransfer(safe, deviceId, allowance.allowance, toAddress, valueNumber)
             updateState { copy(loading = false, done = true) }
         }
     }
 
-    private fun loadLimits() {
+    private fun loadAllowances() {
         loadingLaunch {
             updateState { copy(loading = true) }
             val safe = safeRepository.loadSafeAddress()
-            val limits = safeRepository.loadLimits(safe).map {
+            val allowances = safeRepository.loadAllowances(safe).map {
                 val tokenInfo =
                     if (it.token == Solidity.Address(BigInteger.ZERO)) SafeRepository.ETH_TOKEN_INFO else safeRepository.loadTokenInfo(it.token)
-                WrappedLimit("${tokenInfo.symbol} (${(it.amount - it.spent).shiftedString(tokenInfo.decimals)})", tokenInfo, it)
+                WrappedAllowance("${tokenInfo.symbol} (${(it.amount - it.spent).shiftedString(tokenInfo.decimals)})", tokenInfo, it)
             }
-            updateState { copy(loading = false, limits = limits) }
+            updateState { copy(loading = false, allowances = allowances) }
         }
     }
 
@@ -91,40 +92,40 @@ class LimitTransferViewModel(
 }
 
 @ExperimentalCoroutinesApi
-class LimitTransferActivity : BaseActivity<LimitTransferContract.State, LimitTransferContract>() {
-    override val viewModel: LimitTransferContract by viewModel()
-    private lateinit var spinnerAdapter: ArrayAdapter<LimitTransferContract.WrappedLimit>
+class InstantTransferActivity : BaseActivity<InstantTransferContract.State, InstantTransferContract>() {
+    override val viewModel: InstantTransferContract by viewModel()
+    private lateinit var spinnerAdapter: ArrayAdapter<InstantTransferContract.WrappedAllowance>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.screen_limit_transfer)
-        limit_transfer_back_btn.setOnClickListener { onBackPressed() }
-        limit_transfer_submit_btn.setOnClickListener {
-            viewModel.submitLimitTransfer(
-                (limit_transfer_list.selectedItem as? LimitTransferContract.WrappedLimit),
-                limit_transfer_recipient_input.text.toString(),
-                limit_transfer_value_input.text.toString()
+        setContentView(R.layout.screen_instant_transfer)
+        instant_transfer_back_btn.setOnClickListener { onBackPressed() }
+        instant_transfer_submit_btn.setOnClickListener {
+            viewModel.submitInstantTransfer(
+                (instant_transfer_list.selectedItem as? InstantTransferContract.WrappedAllowance),
+                instant_transfer_recipient_input.text.toString(),
+                instant_transfer_value_input.text.toString()
             )
         }
         spinnerAdapter = ArrayAdapter(
             this, android.R.layout.simple_list_item_1, mutableListOf()
         )
-        limit_transfer_list.adapter = spinnerAdapter
+        instant_transfer_list.adapter = spinnerAdapter
     }
 
-    override fun updateState(state: LimitTransferContract.State) {
+    override fun updateState(state: InstantTransferContract.State) {
         if (state.done) {
             finish()
             return
         }
-        limit_transfer_submit_btn.isEnabled = !state.loading
+        instant_transfer_submit_btn.isEnabled = !state.loading
         spinnerAdapter.clear()
-        spinnerAdapter.addAll(state.limits)
+        spinnerAdapter.addAll(state.allowances)
         spinnerAdapter.notifyDataSetChanged()
     }
 
     companion object {
-        fun createIntent(context: Context) = Intent(context, LimitTransferActivity::class.java)
+        fun createIntent(context: Context) = Intent(context, InstantTransferActivity::class.java)
     }
 
 }

@@ -32,15 +32,15 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.transactions.LimitTransferActivity"
+            android:name=".ui.transactions.InstantTransferActivity"
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.settings.ManageLimitTransferActivity"
+            android:name=".ui.settings.ManageAllowancesActivity"
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.settings.SetTransferLimitActivity"
+            android:name=".ui.settings.SetAllowanceActivity"
             android:screenOrientation="portrait" />
     </application>
 

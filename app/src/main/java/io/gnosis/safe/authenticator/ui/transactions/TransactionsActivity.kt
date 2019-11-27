@@ -110,7 +110,7 @@ class TransactionsActivity : BaseActivity<TransactionsContract.State, Transactio
             startActivity(SettingsActivity.createIntent(this))
         }
         transactions_add_tx_btn.setOnClickListener {
-            startActivity(LimitTransferActivity.createIntent(this))
+            startActivity(InstantTransferActivity.createIntent(this))
         }
     }
 

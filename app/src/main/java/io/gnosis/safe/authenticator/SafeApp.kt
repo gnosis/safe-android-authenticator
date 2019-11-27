@@ -6,7 +6,7 @@ import com.squareup.picasso.Picasso
 import io.gnosis.safe.authenticator.data.JsonRpcApi
 import io.gnosis.safe.authenticator.data.RelayServiceApi
 import io.gnosis.safe.authenticator.data.TransactionServiceApi
-import io.gnosis.safe.authenticator.data.TransferLimitServiceApi
+import io.gnosis.safe.authenticator.data.InstantTransferServiceApi
 import io.gnosis.safe.authenticator.data.adapter.*
 import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.repositories.SafeRepositoryImpl
@@ -96,13 +96,13 @@ class SafeApp : Application() {
                 .create(TransactionServiceApi::class.java)
         }
 
-        single<TransferLimitServiceApi> {
+        single<InstantTransferServiceApi> {
             Retrofit.Builder()
                 .client(get())
-                .baseUrl(TransferLimitServiceApi.BASE_URL)
+                .baseUrl(InstantTransferServiceApi.BASE_URL)
                 .addConverterFactory(MoshiConverterFactory.create(get()))
                 .build()
-                .create(TransferLimitServiceApi::class.java)
+                .create(InstantTransferServiceApi::class.java)
         }
 
         single<JsonRpcApi> {
@@ -132,9 +132,9 @@ class SafeApp : Application() {
         viewModel<TransactionsContract> { TransactionsViewModel(get()) }
         viewModel<SettingsContract> { SettingsViewModel(get()) }
         viewModel<NewTransactionContract> { NewTransactionViewModel(get()) }
-        viewModel<SetTransferLimitContract> { SetTransferLimitViewModel(get()) }
-        viewModel<ManageLimitTransferContract> { ManageLimitTransferViewModel(get()) }
-        viewModel<LimitTransferContract> { LimitTransferViewModel(get()) }
+        viewModel<SetAllowanceContract> { SetAllowanceViewModel(get()) }
+        viewModel<ManageAllowancesContract> { ManageAllowancesViewModel(get()) }
+        viewModel<InstantTransferContract> { InstantTransferViewModel(get()) }
         viewModel<TransactionConfirmationContract> { (
                                                          safe: Solidity.Address,
                                                          transactionHash: String?,

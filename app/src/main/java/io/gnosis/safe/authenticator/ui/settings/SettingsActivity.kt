@@ -35,7 +35,7 @@ class SettingsViewModel(
 
     private fun loadDeviceData() {
         safeLaunch {
-            val deviceId = safeRepository.loadDeviceId()
+            val deviceId = safeRepository.loadSafeAddress()
             val formattedId = deviceId.asEthereumAddressChecksumString()
             updateState { copy(deviceId = deviceId, formattedId = formattedId) }
         }
@@ -69,7 +69,7 @@ class SettingsActivity : BaseActivity<SettingsContract.State, SettingsContract>(
 
         settings_back_btn.setOnClickListener { onBackPressed() }
         settings_custom_tx_txt.setOnClickListener { startActivity(NewTransactionActivity.createIntent(this)) }
-        settings_manage_limit_transfer_module_txt.setOnClickListener { startActivity(ManageLimitTransferActivity.createIntent(this)) }
+        settings_manage_allowance_module_txt.setOnClickListener { startActivity(ManageAllowancesActivity.createIntent(this)) }
     }
 
     companion object {

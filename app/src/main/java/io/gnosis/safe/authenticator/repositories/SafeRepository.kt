@@ -4,14 +4,14 @@ import android.content.Context
 import io.gnosis.safe.authenticator.*
 import io.gnosis.safe.authenticator.BuildConfig
 import io.gnosis.safe.authenticator.R
+import io.gnosis.safe.authenticator.data.InstantTransferServiceApi
 import io.gnosis.safe.authenticator.data.JsonRpcApi
 import io.gnosis.safe.authenticator.data.RelayServiceApi
 import io.gnosis.safe.authenticator.data.TransactionServiceApi
-import io.gnosis.safe.authenticator.data.TransferLimitServiceApi
-import io.gnosis.safe.authenticator.data.models.LimitTransferExecution
+import io.gnosis.safe.authenticator.data.models.InstantTransferRequest
 import io.gnosis.safe.authenticator.data.models.ServiceTransaction
 import io.gnosis.safe.authenticator.data.models.ServiceTransactionRequest
-import io.gnosis.safe.authenticator.repositories.SafeRepository.Companion.TRANSFER_LIMIT_MODULE_ADDRESS
+import io.gnosis.safe.authenticator.repositories.SafeRepository.Companion.ALLOWANCE_MODULE_ADDRESS
 import io.gnosis.safe.authenticator.utils.asMiddleEllipsized
 import io.gnosis.safe.authenticator.utils.nullOnThrow
 import io.gnosis.safe.authenticator.utils.shiftedString
@@ -98,7 +98,7 @@ interface SafeRepository {
         val additionalInfo: String? = null
     )
 
-    data class Limit(
+    data class Allowance(
         val token: Solidity.Address,
         val amount: BigInteger,
         val spent: BigInteger,
@@ -112,13 +112,21 @@ interface SafeRepository {
     suspend fun loadTokenInfo(token: Solidity.Address): TokenInfo
     suspend fun loadPendingTransaction(txHash: String): ServiceSafeTx
     suspend fun loadTransactionInformation(safe: Solidity.Address, transaction: SafeTx): TransactionInfo
-    suspend fun performTransferLimit(safe: Solidity.Address, limit: Limit, to: Solidity.Address, amount: BigInteger)
-    suspend fun loadLimits(safe: Solidity.Address): List<Limit>
+    suspend fun performInstantTransfer(
+        safe: Solidity.Address,
+        delegate: Solidity.Address,
+        allowance: Allowance,
+        to: Solidity.Address,
+        amount: BigInteger
+    )
+
+    suspend fun loadAllowances(safe: Solidity.Address): List<Allowance>
+    suspend fun loadAllowancesDelegates(safe: Solidity.Address): List<Solidity.Address>
     suspend fun loadModules(safe: Solidity.Address): List<Solidity.Address>
 
     companion object {
         val ETH_TOKEN_INFO = TokenInfo("ETH", 18, "Ether", null)
-        val TRANSFER_LIMIT_MODULE_ADDRESS = BuildConfig.TRANSFER_LIMIT_MODULE.asEthereumAddress()!!
+        val ALLOWANCE_MODULE_ADDRESS = BuildConfig.ALLOWANCE_MODULE.asEthereumAddress()!!
     }
 }
 
@@ -129,7 +137,7 @@ class SafeRepositoryImpl(
     private val jsonRpcApi: JsonRpcApi,
     private val relayServiceApi: RelayServiceApi,
     private val transactionServiceApi: TransactionServiceApi,
-    private val transferLimitServiceApi: TransferLimitServiceApi,
+    private val instantTransferServiceApi: InstantTransferServiceApi,
     private val preferencesManager: PreferencesManager
 ) : SafeRepository {
 
@@ -189,20 +197,21 @@ class SafeRepositoryImpl(
             )
         ).result!!.let { GnosisSafe.GetModules.decode(it).param0.items }
 
-    override suspend fun loadLimits(safe: Solidity.Address): List<SafeRepository.Limit> {
+    override suspend fun loadAllowances(safe: Solidity.Address): List<SafeRepository.Allowance> {
+        val delegate = loadDeviceId()
         val tokensResp = jsonRpcApi.post(
             JsonRpcApi.JsonRpcRequest(
                 method = "eth_call",
                 params = listOf(
                     mapOf(
-                        "to" to TRANSFER_LIMIT_MODULE_ADDRESS,
-                        "data" to TransferLimitModule.GetTokens.encode(safe)
+                        "to" to ALLOWANCE_MODULE_ADDRESS,
+                        "data" to AllowanceModule.GetTokens.encode(safe, delegate)
                     ),
                     "latest"
                 )
             )
         ).result!!
-        val tokens = TransferLimitModule.GetTokens.decode(tokensResp).param0.items
+        val tokens = AllowanceModule.GetTokens.decode(tokensResp).param0.items
         return jsonRpcApi.post(
             tokens.mapIndexed { index, address ->
                 JsonRpcApi.JsonRpcRequest(
@@ -210,16 +219,16 @@ class SafeRepositoryImpl(
                     method = "eth_call",
                     params = listOf(
                         mapOf(
-                            "to" to TRANSFER_LIMIT_MODULE_ADDRESS,
-                            "data" to TransferLimitModule.GetTokenLimit.encode(safe, address)
+                            "to" to ALLOWANCE_MODULE_ADDRESS,
+                            "data" to AllowanceModule.GetTokenAllowance.encode(safe, delegate, address)
                         ),
                         "latest"
                     )
                 )
             }
         ).map { resp ->
-            TransferLimitModule.GetTokenLimit.decode(resp.result!!).param0.items.let {
-                SafeRepository.Limit(
+            AllowanceModule.GetTokenAllowance.decode(resp.result!!).param0.items.let {
+                SafeRepository.Allowance(
                     token = tokens[resp.id],
                     amount = it[0].value,
                     spent = it[1].value,
@@ -232,7 +241,23 @@ class SafeRepositoryImpl(
 
     }
 
-    private suspend fun getTransferLimitHash(
+    override suspend fun loadAllowancesDelegates(safe: Solidity.Address): List<Solidity.Address> {
+        val delegatesResp = jsonRpcApi.post(
+            JsonRpcApi.JsonRpcRequest(
+                method = "eth_call",
+                params = listOf(
+                    mapOf(
+                        "to" to ALLOWANCE_MODULE_ADDRESS,
+                        "data" to AllowanceModule.GetDelegates.encode(safe, Solidity.UInt48(BigInteger.ZERO), Solidity.UInt8(BigInteger.valueOf(100)))
+                    ),
+                    "latest"
+                )
+            )
+        ).result!!
+        return AllowanceModule.GetDelegates.decode(delegatesResp).results.items
+    }
+
+    private suspend fun getInstantTransferHash(
         safe: Solidity.Address,
         token: Solidity.Address,
         to: Solidity.Address,
@@ -245,8 +270,8 @@ class SafeRepositoryImpl(
             method = "eth_call",
             params = listOf(
                 mapOf(
-                    "to" to TRANSFER_LIMIT_MODULE_ADDRESS,
-                    "data" to TransferLimitModule.GenerateTransferHash.encode(
+                    "to" to ALLOWANCE_MODULE_ADDRESS,
+                    "data" to AllowanceModule.GenerateTransferHash.encode(
                         safe,
                         token,
                         to,
@@ -260,17 +285,25 @@ class SafeRepositoryImpl(
             )
         )
     ).result!!.let {
-        TransferLimitModule.GenerateTransferHash.decode(it).param0.bytes
+        AllowanceModule.GenerateTransferHash.decode(it).param0.bytes
     }
 
-    override suspend fun performTransferLimit(safe: Solidity.Address, limit: SafeRepository.Limit, to: Solidity.Address, amount: BigInteger) {
-        val transferLimitHash = getTransferLimitHash(safe, limit.token, to, amount, Solidity.Address(BigInteger.ZERO), BigInteger.ZERO, limit.nonce)
+    override suspend fun performInstantTransfer(
+        safe: Solidity.Address,
+        delegate: Solidity.Address,
+        allowance: SafeRepository.Allowance,
+        to: Solidity.Address,
+        amount: BigInteger
+    ) {
+        val transferHash =
+            getInstantTransferHash(safe, allowance.token, to, amount, Solidity.Address(BigInteger.ZERO), BigInteger.ZERO, allowance.nonce)
         val keyPair = getKeyPair()
-        val signature = keyPair.sign(transferLimitHash)
-        val hash = transferLimitServiceApi.executeLimitTransfer(
+        val signature = keyPair.sign(transferHash)
+        val hash = instantTransferServiceApi.submitInstantTransfer(
             safe.asEthereumAddressChecksumString(),
-            limit.token.asEthereumAddressChecksumString(),
-            LimitTransferExecution(
+            delegate.asEthereumAddressChecksumString(),
+            allowance.token.asEthereumAddressChecksumString(),
+            InstantTransferRequest(
                 to,
                 amount,
                 signature.toSignatureString().addHexPrefix()
@@ -379,27 +412,27 @@ class SafeRepositoryImpl(
                     assetLabel = "Safe management"
                 )
             }
-            transaction.data.isSolidityMethod(Compound.Transfer.METHOD_ID) -> { // Token transfer
-                val transferArgs = Compound.Transfer.decodeArguments(transaction.data.removeSolidityMethodPrefix(Compound.Transfer.METHOD_ID))
+            transaction.data.isSolidityMethod(ERC20Token.Transfer.METHOD_ID) -> { // Token transfer
+                val transferArgs = ERC20Token.Transfer.decodeArguments(transaction.data.removeSolidityMethodPrefix(ERC20Token.Transfer.METHOD_ID))
                 val tokenInfo = nullOnThrow { loadTokenInfo(transaction.to) }
                 val symbol = tokenInfo?.symbol ?: transaction.to.asEthereumAddressChecksumString().asMiddleEllipsized(4)
                 SafeRepository.TransactionInfo(
-                    recipient = transferArgs.dst,
-                    recipientLabel = transferArgs.dst.asEthereumAddressChecksumString().asMiddleEllipsized(4),
+                    recipient = transferArgs._to,
+                    recipientLabel = transferArgs._to.asEthereumAddressChecksumString().asMiddleEllipsized(4),
                     assetIcon = tokenInfo?.icon,
-                    assetLabel = "${transferArgs.amount.value.shiftedString(tokenInfo?.decimals ?: 0)} $symbol",
+                    assetLabel = "${transferArgs._value.value.shiftedString(tokenInfo?.decimals ?: 0)} $symbol",
                     additionalInfo = "Token transfer"
                 )
             }
-            transaction.data.isSolidityMethod(Compound.Approve.METHOD_ID) -> { // Token transfer
-                val approveArgs = Compound.Approve.decodeArguments(transaction.data.removeSolidityMethodPrefix(Compound.Transfer.METHOD_ID))
+            transaction.data.isSolidityMethod(ERC20Token.Approve.METHOD_ID) -> { // Token transfer
+                val approveArgs = ERC20Token.Approve.decodeArguments(transaction.data.removeSolidityMethodPrefix(ERC20Token.Transfer.METHOD_ID))
                 val tokenInfo = nullOnThrow { loadTokenInfo(transaction.to) }
                 val symbol = tokenInfo?.symbol ?: transaction.to.asEthereumAddressChecksumString().asMiddleEllipsized(4)
                 SafeRepository.TransactionInfo(
-                    recipient = approveArgs.spender,
-                    recipientLabel = approveArgs.spender.asEthereumAddressChecksumString().asMiddleEllipsized(4),
+                    recipient = approveArgs._spender,
+                    recipientLabel = approveArgs._spender.asEthereumAddressChecksumString().asMiddleEllipsized(4),
                     assetIcon = tokenInfo?.icon,
-                    assetLabel = "Approve ${approveArgs.amount.value.shiftedString(tokenInfo?.decimals ?: 0)} $symbol",
+                    assetLabel = "Approve ${approveArgs._value.value.shiftedString(tokenInfo?.decimals ?: 0)} $symbol",
                     additionalInfo = "Token approval"
                 )
             }
