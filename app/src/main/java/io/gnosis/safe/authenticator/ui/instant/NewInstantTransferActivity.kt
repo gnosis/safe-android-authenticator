@@ -1,8 +1,10 @@
-package io.gnosis.safe.authenticator.ui.transactions
+package io.gnosis.safe.authenticator.ui.instant
 
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import androidx.lifecycle.liveData
 import io.gnosis.safe.authenticator.R
@@ -16,11 +18,11 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import pm.gnosis.model.Solidity
 import pm.gnosis.utils.asEthereumAddress
+import pm.gnosis.utils.asEthereumAddressString
 import java.math.BigDecimal
-import java.math.BigInteger
 
 @ExperimentalCoroutinesApi
-abstract class InstantTransferContract : LoadingViewModel<InstantTransferContract.State>() {
+abstract class NewInstantTransferContract : LoadingViewModel<NewInstantTransferContract.State>() {
     abstract fun submitInstantTransfer(
         allowance: WrappedAllowance?,
         to: String,
@@ -36,6 +38,7 @@ abstract class InstantTransferContract : LoadingViewModel<InstantTransferContrac
 
     data class WrappedAllowance(
         val label: String,
+        val token: Solidity.Address,
         val tokenInfo: SafeRepository.TokenInfo,
         val allowance: SafeRepository.Allowance
     ) {
@@ -46,9 +49,9 @@ abstract class InstantTransferContract : LoadingViewModel<InstantTransferContrac
 }
 
 @ExperimentalCoroutinesApi
-class InstantTransferViewModel(
+class NewInstantTransferViewModel(
     private val safeRepository: SafeRepository
-) : InstantTransferContract() {
+) : NewInstantTransferContract() {
 
     override val state = liveData {
         loadAllowances()
@@ -77,9 +80,12 @@ class InstantTransferViewModel(
             updateState { copy(loading = true) }
             val safe = safeRepository.loadSafeAddress()
             val allowances = safeRepository.loadAllowances(safe).map {
-                val tokenInfo =
-                    if (it.token == Solidity.Address(BigInteger.ZERO)) SafeRepository.ETH_TOKEN_INFO else safeRepository.loadTokenInfo(it.token)
-                WrappedAllowance("${tokenInfo.symbol} (${(it.amount - it.spent).shiftedString(tokenInfo.decimals)})", tokenInfo, it)
+                val tokenInfo = safeRepository.loadTokenInfo(it.token)
+                WrappedAllowance(
+                    "${tokenInfo.symbol} (${(it.amount - it.spent).shiftedString(
+                        tokenInfo.decimals
+                    )})", it.token, tokenInfo, it
+                )
             }
             updateState { copy(loading = false, allowances = allowances) }
         }
@@ -92,17 +98,19 @@ class InstantTransferViewModel(
 }
 
 @ExperimentalCoroutinesApi
-class InstantTransferActivity : BaseActivity<InstantTransferContract.State, InstantTransferContract>() {
-    override val viewModel: InstantTransferContract by viewModel()
-    private lateinit var spinnerAdapter: ArrayAdapter<InstantTransferContract.WrappedAllowance>
+class NewInstantTransferActivity : BaseActivity<NewInstantTransferContract.State, NewInstantTransferContract>() {
+    override val viewModel: NewInstantTransferContract by viewModel()
+    private lateinit var spinnerAdapter: ArrayAdapter<NewInstantTransferContract.WrappedAllowance>
+    private var selectedToken: Solidity.Address? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.screen_instant_transfer)
+        selectedToken = intent.getStringExtra(EXTRA_SELECTED_TOKEN)?.asEthereumAddress()
         instant_transfer_back_btn.setOnClickListener { onBackPressed() }
         instant_transfer_submit_btn.setOnClickListener {
             viewModel.submitInstantTransfer(
-                (instant_transfer_list.selectedItem as? InstantTransferContract.WrappedAllowance),
+                (instant_transfer_list.selectedItem as? NewInstantTransferContract.WrappedAllowance),
                 instant_transfer_recipient_input.text.toString(),
                 instant_transfer_value_input.text.toString()
             )
@@ -111,9 +119,19 @@ class InstantTransferActivity : BaseActivity<InstantTransferContract.State, Inst
             this, android.R.layout.simple_list_item_1, mutableListOf()
         )
         instant_transfer_list.adapter = spinnerAdapter
+        instant_transfer_list.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
+            override fun onNothingSelected(p0: AdapterView<*>?) {
+                selectedToken = null
+            }
+
+            override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
+                selectedToken = (instant_transfer_list.selectedItem as? NewInstantTransferContract.WrappedAllowance)?.token
+            }
+
+        }
     }
 
-    override fun updateState(state: InstantTransferContract.State) {
+    override fun updateState(state: NewInstantTransferContract.State) {
         if (state.done) {
             finish()
             return
@@ -122,10 +140,18 @@ class InstantTransferActivity : BaseActivity<InstantTransferContract.State, Inst
         spinnerAdapter.clear()
         spinnerAdapter.addAll(state.allowances)
         spinnerAdapter.notifyDataSetChanged()
+        selectedToken?.let { token ->
+            val selected = state.allowances.indexOfFirst { it.token == token }
+            if (selected >= 0) instant_transfer_list.setSelection(selected)
+        }
+
     }
 
     companion object {
-        fun createIntent(context: Context) = Intent(context, InstantTransferActivity::class.java)
+        private const val EXTRA_SELECTED_TOKEN = "extra.string.selected_token"
+        fun createIntent(context: Context, selected: Solidity.Address? = null) = Intent(context, NewInstantTransferActivity::class.java).apply {
+            putExtra(EXTRA_SELECTED_TOKEN, selected?.asEthereumAddressString())
+        }
     }
 
 }

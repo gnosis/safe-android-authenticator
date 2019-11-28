@@ -91,8 +91,7 @@ class ManageAllowancesViewModel(
                 updateState { copy(accessTx = accessTx) }
             } else updateState { copy(accessTx = null) }
             val allowances = safeRepository.loadAllowances(safe).map {
-                val tokenInfo =
-                    if (it.token == Solidity.Address(BigInteger.ZERO)) SafeRepository.ETH_TOKEN_INFO else safeRepository.loadTokenInfo(it.token)
+                val tokenInfo = safeRepository.loadTokenInfo(it.token)
                 WrappedAllowance(tokenInfo, it)
             }
             updateState { copy(loading = false, allowances = allowances) }

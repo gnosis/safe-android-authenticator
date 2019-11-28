@@ -4,39 +4,24 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.lifecycle.liveData
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.ListAdapter
-import androidx.recyclerview.widget.RecyclerView
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.ui.base.BaseActivity
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
-import io.gnosis.safe.authenticator.ui.settings.SettingsActivity
-import io.gnosis.safe.authenticator.ui.transactions.TransactionsActivity
+import io.gnosis.safe.authenticator.ui.overview.OverviewActivity
 import io.gnosis.safe.authenticator.utils.asMiddleEllipsized
 import io.gnosis.safe.authenticator.utils.copyToClipboard
 import io.gnosis.safe.authenticator.utils.generateQrCode
 import io.gnosis.safe.authenticator.utils.nullOnThrow
-import kotlinx.android.synthetic.main.item_pending_tx.view.*
 import kotlinx.android.synthetic.main.screen_intro.*
-import kotlinx.android.synthetic.main.screen_new_transaction.*
-import kotlinx.android.synthetic.main.screen_transactions.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.walleth.khex.toHexString
 import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
-import pm.gnosis.model.Solidity
-import pm.gnosis.utils.*
-import pm.gnosis.utils.toHexString
-import java.math.BigInteger
+import pm.gnosis.utils.asEthereumAddress
 
 @ExperimentalCoroutinesApi
 abstract class IntroContract : LoadingViewModel<IntroContract.State>() {
@@ -109,7 +94,7 @@ class IntroActivity : BaseActivity<IntroContract.State, IntroContract>() {
 
     override fun updateState(state: IntroContract.State) {
         if (state.done) {
-            startActivity(TransactionsActivity.createIntent(this))
+            startActivity(OverviewActivity.createIntent(this))
             finish()
             return
         }

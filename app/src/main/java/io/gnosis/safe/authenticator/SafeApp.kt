@@ -1,6 +1,7 @@
 package io.gnosis.safe.authenticator
 
 import android.app.Application
+import androidx.room.Room
 import com.squareup.moshi.Moshi
 import com.squareup.picasso.Picasso
 import io.gnosis.safe.authenticator.data.JsonRpcApi
@@ -8,8 +9,15 @@ import io.gnosis.safe.authenticator.data.RelayServiceApi
 import io.gnosis.safe.authenticator.data.TransactionServiceApi
 import io.gnosis.safe.authenticator.data.InstantTransferServiceApi
 import io.gnosis.safe.authenticator.data.adapter.*
+import io.gnosis.safe.authenticator.db.ApplicationDatabase
 import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.repositories.SafeRepositoryImpl
+import io.gnosis.safe.authenticator.ui.assets.AssetsContract
+import io.gnosis.safe.authenticator.ui.assets.AssetsViewModel
+import io.gnosis.safe.authenticator.ui.instant.InstantTransferListContract
+import io.gnosis.safe.authenticator.ui.instant.InstantTransferListViewModel
+import io.gnosis.safe.authenticator.ui.instant.NewInstantTransferContract
+import io.gnosis.safe.authenticator.ui.instant.NewInstantTransferViewModel
 import io.gnosis.safe.authenticator.ui.intro.IntroContract
 import io.gnosis.safe.authenticator.ui.intro.IntroViewModel
 import io.gnosis.safe.authenticator.ui.settings.*
@@ -74,6 +82,15 @@ class SafeApp : Application() {
         single<FingerprintHelper> { AndroidFingerprintHelper(get()) }
 
         single<EncryptionManager> { AesEncryptionManager(get(), get(), get(), get(), 4096) }
+
+        single {
+            Room.databaseBuilder(get(), ApplicationDatabase::class.java, ApplicationDatabase.DB_NAME)
+                .build()
+        }
+
+        single {
+            get<ApplicationDatabase>().instantTransferDao()
+        }
     }
 
     private val apiModule = module {
@@ -123,18 +140,20 @@ class SafeApp : Application() {
     }
 
     private val repositoryModule = module {
-        single<SafeRepository> { SafeRepositoryImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
+        single<SafeRepository> { SafeRepositoryImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     }
 
     @ExperimentalCoroutinesApi
     private val viewModelModule = module {
         viewModel<IntroContract> { IntroViewModel(get()) }
+        viewModel<AssetsContract> { AssetsViewModel(get()) }
         viewModel<TransactionsContract> { TransactionsViewModel(get()) }
         viewModel<SettingsContract> { SettingsViewModel(get()) }
         viewModel<NewTransactionContract> { NewTransactionViewModel(get()) }
         viewModel<SetAllowanceContract> { SetAllowanceViewModel(get()) }
         viewModel<ManageAllowancesContract> { ManageAllowancesViewModel(get()) }
-        viewModel<InstantTransferContract> { InstantTransferViewModel(get()) }
+        viewModel<NewInstantTransferContract> { NewInstantTransferViewModel(get()) }
+        viewModel<InstantTransferListContract> { InstantTransferListViewModel(get()) }
         viewModel<TransactionConfirmationContract> { (
                                                          safe: Solidity.Address,
                                                          transactionHash: String?,

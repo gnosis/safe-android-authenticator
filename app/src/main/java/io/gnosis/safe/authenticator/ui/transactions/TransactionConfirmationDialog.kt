@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.core.view.setPadding
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.*
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.squareup.picasso.Picasso
@@ -118,14 +119,15 @@ class TransactionConfirmationViewModel(
 
 @ExperimentalCoroutinesApi
 class TransactionConfirmationDialog(
-    activity: AppCompatActivity,
+    activity: FragmentActivity,
     safe: Solidity.Address,
     transactionHash: String?,
     transaction: SafeRepository.SafeTx,
-    executionInfo: SafeRepository.SafeTxExecInfo? = null
+    executionInfo: SafeRepository.SafeTxExecInfo? = null,
+    callback: Callback? = null
 ) : BottomSheetDialog(activity), LifecycleOwner, ViewModelStoreOwner {
 
-    private val callback: WeakReference<Callback>? = (activity as? Callback)?.let { WeakReference(it) }
+    private val callback: WeakReference<Callback>? = (callback ?: (activity as? Callback))?.let { WeakReference(it) }
 
     private val lifecycle = LifecycleRegistry(this)
     override fun getLifecycle() = lifecycle

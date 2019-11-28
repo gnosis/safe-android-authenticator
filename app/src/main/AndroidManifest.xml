@@ -22,7 +22,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.transactions.TransactionsActivity"
+            android:name=".ui.overview.OverviewActivity"
             android:screenOrientation="portrait" />
         <activity
             android:name=".ui.settings.SettingsActivity"
@@ -32,7 +32,7 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.transactions.InstantTransferActivity"
+            android:name=".ui.instant.NewInstantTransferActivity"
             android:screenOrientation="portrait" />
 
         <activity

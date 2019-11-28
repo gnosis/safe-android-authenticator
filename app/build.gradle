@@ -22,10 +22,16 @@ android {
         buildConfigField javaTypes.STRING, "TRANSACTION_SERVICE_URL", asString(getKey("TRANSACTION_SERVICE_URL", "https://safe-transaction.rinkeby.gnosis.io/api/"))
         buildConfigField javaTypes.STRING, "INSTANT_TRANSFER_SERVICE_URL", asString(getKey("INSTANT_TRANSFER_SERVICE_URL", "https://safe-rinkeby-relay.herokuapp.com/api/"))
 
-        buildConfigField javaTypes.STRING, "ALLOWANCE_MODULE", asString(getKey("ALLOWANCE_MODULE", "0xdA90A7E17F4e02E70bDcC824E9F211DDe79359CF"))
+        buildConfigField javaTypes.STRING, "ALLOWANCE_MODULE", asString(getKey("ALLOWANCE_MODULE", "0xfa546b1E598216c75D087D0b012ED978a726fB7d"))
 
         vectorDrawables.useSupportLibrary = true
         project.ext.set("archivesBaseName", String.format("safe-authenticator-%s", defaultConfig.versionCode))
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = ["room.schemaLocation": "$projectDir/schemas".toString()]
+            }
+        }
     }
     signingConfigs {
         debug {
@@ -65,7 +71,13 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$versions.androidx_lifecycle"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$versions.androidx_lifecycle"
 
+    kapt "androidx.room:room-compiler:$versions.androidx_room"
+    implementation "androidx.room:room-runtime:$versions.androidx_room"
+    implementation "androidx.room:room-ktx:$versions.androidx_room"
+
     implementation "com.google.android.material:material:$versions.material"
+
+    implementation 'com.jpardogo.materialtabstrip:library:1.1.1'
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$versions.kotlinx_coroutines"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$versions.kotlinx_coroutines"

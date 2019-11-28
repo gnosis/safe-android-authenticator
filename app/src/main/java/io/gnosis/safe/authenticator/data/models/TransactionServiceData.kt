@@ -2,6 +2,9 @@ package io.gnosis.safe.authenticator.data.models
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import io.gnosis.safe.authenticator.data.adapter.DecimalNumber
+import pm.gnosis.model.Solidity
+import java.math.BigInteger
 
 @JsonClass(generateAdapter = true)
 data class PaginatedResult<T>(
@@ -60,3 +63,9 @@ data class ServiceTransactionRequest(
         const val EXECUTION = "EXECUTION"
     }
 }
+
+@JsonClass(generateAdapter = true)
+data class ServiceBalance(
+    @Json(name = "tokenAddress") val tokenAddress: Solidity.Address?,
+    @DecimalNumber @Json(name = "balance") val balance: BigInteger
+)

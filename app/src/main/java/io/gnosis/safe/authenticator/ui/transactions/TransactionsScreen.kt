@@ -1,7 +1,5 @@
 package io.gnosis.safe.authenticator.ui.transactions
 
-import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,10 +12,10 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.repositories.SafeRepository
-import io.gnosis.safe.authenticator.ui.base.BaseActivity
+import io.gnosis.safe.authenticator.ui.base.BaseFragment
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
-import io.gnosis.safe.authenticator.ui.settings.SettingsActivity
+import io.gnosis.safe.authenticator.ui.instant.NewInstantTransferActivity
 import io.gnosis.safe.authenticator.utils.nullOnThrow
 import kotlinx.android.synthetic.main.item_pending_tx.view.*
 import kotlinx.android.synthetic.main.screen_transactions.*
@@ -92,25 +90,26 @@ class TransactionsViewModel(
 }
 
 @ExperimentalCoroutinesApi
-class TransactionsActivity : BaseActivity<TransactionsContract.State, TransactionsContract>(), TransactionConfirmationDialog.Callback {
+class TransactionsScreen : BaseFragment<TransactionsContract.State, TransactionsContract>(), TransactionConfirmationDialog.Callback {
     override val viewModel: TransactionsContract by viewModel()
-    private val adapter = TransactionAdapter()
-    private val layoutManager = LinearLayoutManager(this)
+    private lateinit var adapter: TransactionAdapter
+    private lateinit var layoutManager: LinearLayoutManager
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.screen_transactions)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
+        inflater.inflate(R.layout.screen_transactions, container, false)
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        adapter = TransactionAdapter()
+        layoutManager = LinearLayoutManager(context)
         transactions_list.adapter = adapter
         transactions_list.layoutManager = layoutManager
         //transactions_back_btn.setOnClickListener { onBackPressed() }
         transactions_refresh.setOnRefreshListener {
             viewModel.loadTransactions()
         }
-        transactions_settings_btn.setOnClickListener {
-            startActivity(SettingsActivity.createIntent(this))
-        }
         transactions_add_tx_btn.setOnClickListener {
-            startActivity(InstantTransferActivity.createIntent(this))
+            startActivity(NewInstantTransferActivity.createIntent(context!!))
         }
     }
 
@@ -134,7 +133,7 @@ class TransactionsActivity : BaseActivity<TransactionsContract.State, Transactio
         fun bind(safe: Solidity.Address?, item: TransactionsContract.TransactionMeta) {
             itemView.setOnClickListener {
                 safe ?: return@setOnClickListener
-                TransactionConfirmationDialog(this@TransactionsActivity, safe, item.hash, item.tx, item.execInfo).show()
+                activity?.let { TransactionConfirmationDialog(it, safe, item.hash, item.tx, item.execInfo, this@TransactionsScreen).show() }
             }
             itemView.pending_tx_target.setAddress(item.info?.recipient ?: item.tx.to)
             itemView.pending_tx_confirmations.text = when (item.state) {
@@ -164,7 +163,7 @@ class TransactionsActivity : BaseActivity<TransactionsContract.State, Transactio
     }
 
     companion object {
-        fun createIntent(context: Context) = Intent(context, TransactionsActivity::class.java)
+        fun newInstance() = TransactionsScreen()
     }
 
 }

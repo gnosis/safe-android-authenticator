@@ -11,10 +11,13 @@ import io.gnosis.safe.authenticator.data.TransactionServiceApi
 import io.gnosis.safe.authenticator.data.models.InstantTransferRequest
 import io.gnosis.safe.authenticator.data.models.ServiceTransaction
 import io.gnosis.safe.authenticator.data.models.ServiceTransactionRequest
+import io.gnosis.safe.authenticator.db.InstantTransferDao
+import io.gnosis.safe.authenticator.db.InstantTransferDb
 import io.gnosis.safe.authenticator.repositories.SafeRepository.Companion.ALLOWANCE_MODULE_ADDRESS
 import io.gnosis.safe.authenticator.utils.asMiddleEllipsized
 import io.gnosis.safe.authenticator.utils.nullOnThrow
 import io.gnosis.safe.authenticator.utils.shiftedString
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.rx2.await
 import okio.ByteString
 import org.walleth.khex.toHexString
@@ -107,11 +110,21 @@ interface SafeRepository {
         val nonce: BigInteger
     )
 
+    data class InstantTransfer(
+        val txHash: String,
+        val token: Solidity.Address,
+        val tokenInfo: TokenInfo?,
+        val to: Solidity.Address,
+        val amount: BigInteger,
+        val mined: Boolean
+    )
+
     suspend fun loadSafeNonce(safe: Solidity.Address): BigInteger
     suspend fun loadSafeInfo(safe: Solidity.Address): SafeInfo
-    suspend fun loadTokenInfo(token: Solidity.Address): TokenInfo
     suspend fun loadPendingTransaction(txHash: String): ServiceSafeTx
     suspend fun loadTransactionInformation(safe: Solidity.Address, transaction: SafeTx): TransactionInfo
+
+    suspend fun loadInstantTransfers(): List<InstantTransfer>
     suspend fun performInstantTransfer(
         safe: Solidity.Address,
         delegate: Solidity.Address,
@@ -123,6 +136,9 @@ interface SafeRepository {
     suspend fun loadAllowances(safe: Solidity.Address): List<Allowance>
     suspend fun loadAllowancesDelegates(safe: Solidity.Address): List<Solidity.Address>
     suspend fun loadModules(safe: Solidity.Address): List<Solidity.Address>
+
+    suspend fun loadTokenBalances(safe: Solidity.Address): List<Pair<Solidity.Address, BigInteger>>
+    suspend fun loadTokenInfo(token: Solidity.Address): TokenInfo
 
     companion object {
         val ETH_TOKEN_INFO = TokenInfo("ETH", 18, "Ether", null)
@@ -138,6 +154,7 @@ class SafeRepositoryImpl(
     private val relayServiceApi: RelayServiceApi,
     private val transactionServiceApi: TransactionServiceApi,
     private val instantTransferServiceApi: InstantTransferServiceApi,
+    private val instantTransferDao: InstantTransferDao,
     private val preferencesManager: PreferencesManager
 ) : SafeRepository {
 
@@ -232,8 +249,8 @@ class SafeRepositoryImpl(
                     token = tokens[resp.id],
                     amount = it[0].value,
                     spent = it[1].value,
-                    lastSpent = it[2].value.toLong(),
-                    resetPeriod = it[3].value.toLong(),
+                    resetPeriod = it[2].value.toLong(),
+                    lastSpent = it[3].value.toLong(),
                     nonce = it[4].value
                 )
             }
@@ -288,6 +305,27 @@ class SafeRepositoryImpl(
         AllowanceModule.GenerateTransferHash.decode(it).param0.bytes
     }
 
+    override suspend fun loadInstantTransfers(): List<SafeRepository.InstantTransfer> = coroutineScope {
+        val safe = loadSafeAddress()
+        val remoteTransfers = jsonRpcApi.logs(JsonRpcApi.JsonRpcRequest(method = "eth_getLogs", params = listOf(mapOf(
+            "fromBlock" to "0x53EC60",
+            "address" to ALLOWANCE_MODULE_ADDRESS.asEthereumAddressString(),
+            "topics" to listOf(AllowanceModule.Events.ExecuteAllowanceTransfer.EVENT_ID.addHexPrefix())
+        )))).result.mapNotNull {
+            val args = AllowanceModule.Events.ExecuteAllowanceTransfer.decode(it.topics.map { it.removeHexPrefix() }, it.data)
+            if (args.safe != safe) return@mapNotNull null
+            it.transactionHash to args
+        }
+        remoteTransfers.forEach { nullOnThrow { instantTransferDao.delete(it.first) } }
+        instantTransferDao.load().map {
+            val tokenInfo = nullOnThrow { loadTokenInfo(it.token) }
+            SafeRepository.InstantTransfer(it.txHash, it.token, tokenInfo, it.to, it.value, false)
+        } + remoteTransfers.reversed().map { (txHash, params) ->
+            val tokenInfo = nullOnThrow { loadTokenInfo(params.token) }
+            SafeRepository.InstantTransfer(txHash, params.token, tokenInfo, params.to, params.value.value, true)
+        }
+    }
+
     override suspend fun performInstantTransfer(
         safe: Solidity.Address,
         delegate: Solidity.Address,
@@ -295,11 +333,12 @@ class SafeRepositoryImpl(
         to: Solidity.Address,
         amount: BigInteger
     ) {
+        // TODO get allowance nonce from db
         val transferHash =
             getInstantTransferHash(safe, allowance.token, to, amount, Solidity.Address(BigInteger.ZERO), BigInteger.ZERO, allowance.nonce)
         val keyPair = getKeyPair()
         val signature = keyPair.sign(transferHash)
-        val hash = instantTransferServiceApi.submitInstantTransfer(
+        val response = instantTransferServiceApi.submitInstantTransfer(
             safe.asEthereumAddressChecksumString(),
             delegate.asEthereumAddressChecksumString(),
             allowance.token.asEthereumAddressChecksumString(),
@@ -309,13 +348,14 @@ class SafeRepositoryImpl(
                 signature.toSignatureString().addHexPrefix()
             )
         )
-        print(hash)
+        nullOnThrow { instantTransferDao.insert(InstantTransferDb(response.hash, allowance.token, to, amount, allowance.nonce)) }
     }
 
     // TODO: optimize
     private val cachedTokenInfo = HashMap<Solidity.Address, SafeRepository.TokenInfo>()
 
     override suspend fun loadTokenInfo(token: Solidity.Address): SafeRepository.TokenInfo {
+        if (token == Solidity.Address(BigInteger.ZERO)) return SafeRepository.ETH_TOKEN_INFO
         return cachedTokenInfo[token] ?: run {
             relayServiceApi.tokenInfo(token.asEthereumAddressChecksumString()).let {
                 SafeRepository.TokenInfo(it.symbol, it.decimals, it.name, it.logoUri).apply {
@@ -324,6 +364,11 @@ class SafeRepositoryImpl(
             }
         }
     }
+
+    override suspend fun loadTokenBalances(safe: Solidity.Address): List<Pair<Solidity.Address, BigInteger>> =
+        transactionServiceApi.loadBalances(safe.asEthereumAddressChecksumString()).map {
+            (it.tokenAddress ?: Solidity.Address(BigInteger.ZERO)) to it.balance
+        }
 
     override suspend fun loadSafeInfo(safe: Solidity.Address): SafeRepository.SafeInfo {
         val responses = jsonRpcApi.post(

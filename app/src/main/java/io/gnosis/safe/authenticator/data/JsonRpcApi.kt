@@ -14,6 +14,9 @@ interface JsonRpcApi {
     suspend fun receipt(@Body jsonRpcRequest: JsonRpcRequest): JsonRpcTransactionReceiptResult
 
     @POST(".")
+    suspend fun logs(@Body jsonRpcRequest: JsonRpcRequest):  JsonRpcLogsResult
+
+    @POST(".")
     suspend fun post(@Body jsonRpcRequest: JsonRpcRequest): JsonRpcResult
 
     @POST(".")
@@ -40,6 +43,23 @@ interface JsonRpcApi {
         @Json(name = "code") val code: Int,
         @Json(name = "message") val message: String
     )
+
+    @JsonClass(generateAdapter = true)
+    data class JsonRpcLogsResult(
+        @Json(name = "id") val id: Int,
+        @Json(name = "jsonrpc") val jsonRpc: String,
+        @Json(name = "error") val error: JsonRpcError? = null,
+        @Json(name = "result") val result: List<ContractLog>
+    ) {
+        @JsonClass(generateAdapter = true)
+        data class ContractLog(
+            @Json(name = "address") val address: String,
+            @Json(name = "topics") val topics: List<String>,
+            @Json(name = "data") val data: String,
+            @Json(name = "transactionHash") val transactionHash: String
+
+        )
+    }
 
     @JsonClass(generateAdapter = true)
     data class JsonRpcTransactionReceiptResult(
