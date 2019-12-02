@@ -54,6 +54,40 @@
         app:layout_constraintVertical_chainStyle="packed" />
 
     <pm.gnosis.blockies.BlockiesImageView
+        android:id="@+id/settings_safe_img"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_margin="12dp"
+        app:layout_constraintEnd_toStartOf="@id/settings_safe_txt"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/settings_header_bg" />
+
+    <TextView
+        android:id="@+id/settings_safe_txt"
+        android:layout_width="wrap_content"
+        android:layout_height="64dp"
+        android:background="@drawable/selectable_background"
+        android:gravity="center"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:textColor="@color/darkText"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toEndOf="@id/settings_safe_img"
+        app:layout_constraintTop_toBottomOf="@id/settings_header_bg" />
+
+    <View
+        android:id="@+id/settings_device_id_divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:background="@color/divider"
+        app:layout_constraintTop_toBottomOf="@id/settings_safe_txt" />
+
+    <pm.gnosis.blockies.BlockiesImageView
         android:id="@+id/settings_device_id_img"
         android:layout_width="40dp"
         android:layout_height="40dp"
@@ -61,7 +95,7 @@
         app:layout_constraintEnd_toStartOf="@id/settings_device_id_txt"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/settings_header_bg" />
+        app:layout_constraintTop_toBottomOf="@id/settings_device_id_divider" />
 
     <TextView
         android:id="@+id/settings_device_id_txt"
@@ -76,7 +110,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toEndOf="@id/settings_device_id_img"
-        app:layout_constraintTop_toBottomOf="@id/settings_header_bg" />
+        app:layout_constraintTop_toBottomOf="@id/settings_device_id_divider" />
 
     <View
         android:id="@+id/settings_manage_allowance_module_divider"

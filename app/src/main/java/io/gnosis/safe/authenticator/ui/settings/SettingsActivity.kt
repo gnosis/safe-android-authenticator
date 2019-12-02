@@ -21,7 +21,13 @@ import pm.gnosis.model.Solidity
 
 @ExperimentalCoroutinesApi
 abstract class SettingsContract : BaseViewModel<SettingsContract.State>() {
-    data class State(val deviceId: Solidity.Address?, val formattedId: String?, override var viewAction: ViewAction?) : BaseViewModel.State
+    data class State(
+        val safe: Solidity.Address?,
+        val formattedSafe: String?,
+        val deviceId: Solidity.Address?,
+        val formattedId: String?,
+        override var viewAction: ViewAction?
+    ) : BaseViewModel.State
 }
 
 @ExperimentalCoroutinesApi
@@ -35,13 +41,15 @@ class SettingsViewModel(
 
     private fun loadDeviceData() {
         safeLaunch {
-            val deviceId = safeRepository.loadSafeAddress()
+            val deviceId = safeRepository.loadDeviceId()
             val formattedId = deviceId.asEthereumAddressChecksumString()
-            updateState { copy(deviceId = deviceId, formattedId = formattedId) }
+            val safe = safeRepository.loadSafeAddress()
+            val formattedSafe = safe.asEthereumAddressChecksumString()
+            updateState { copy(safe = safe, formattedSafe = formattedSafe, deviceId = deviceId, formattedId = formattedId) }
         }
     }
 
-    override fun initialState() = State(null, null, null)
+    override fun initialState() = State(null, null, null, null, null)
 
 }
 
@@ -61,6 +69,17 @@ class SettingsActivity : BaseActivity<SettingsContract.State, SettingsContract>(
         }
         settings_device_id_txt.text = state.formattedId?.asMiddleEllipsized(4)
         settings_device_id_img.setAddress(state.deviceId)
+        if (state.formattedSafe != null) {
+            val clickListener = View.OnClickListener {
+                copyToClipboard("Safe Address", state.formattedSafe) {
+                    Toast.makeText(this@SettingsActivity, "Copied Safe address to clipboard!", Toast.LENGTH_SHORT).show()
+                }
+            }
+            settings_safe_img.setOnClickListener(clickListener)
+            settings_safe_txt.setOnClickListener(clickListener)
+        }
+        settings_safe_txt.text = state.formattedSafe?.asMiddleEllipsized(4)
+        settings_safe_img.setAddress(state.safe)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

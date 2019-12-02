@@ -21,6 +21,8 @@ import io.gnosis.safe.authenticator.ui.instant.NewInstantTransferViewModel
 import io.gnosis.safe.authenticator.ui.intro.IntroContract
 import io.gnosis.safe.authenticator.ui.intro.IntroViewModel
 import io.gnosis.safe.authenticator.ui.settings.*
+import io.gnosis.safe.authenticator.ui.splash.SplashContract
+import io.gnosis.safe.authenticator.ui.splash.SplashViewModel
 import io.gnosis.safe.authenticator.ui.transactions.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import okhttp3.OkHttpClient
@@ -145,6 +147,7 @@ class SafeApp : Application() {
 
     @ExperimentalCoroutinesApi
     private val viewModelModule = module {
+        viewModel<SplashContract> { SplashViewModel(get(), get()) }
         viewModel<IntroContract> { IntroViewModel(get()) }
         viewModel<AssetsContract> { AssetsViewModel(get()) }
         viewModel<TransactionsContract> { TransactionsViewModel(get()) }

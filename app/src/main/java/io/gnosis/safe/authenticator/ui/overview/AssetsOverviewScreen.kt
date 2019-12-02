@@ -3,6 +3,9 @@ package io.gnosis.safe.authenticator.ui.overview
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -15,25 +18,28 @@ import io.gnosis.safe.authenticator.ui.transactions.TransactionsScreen
 import kotlinx.android.synthetic.main.screen_overview.*
 
 
-class OverviewActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.screen_overview)
-        overview_pager.adapter = MyPagerAdapter(supportFragmentManager)
+class AssetsOverviewScreen : Fragment() {
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
+        inflater.inflate(R.layout.screen_overview, container, false)
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        overview_title.text = getString(R.string.assets)
+        overview_pager.adapter = AssetsOverviewAdapter(childFragmentManager)
         overview_pager_indicator.setViewPager(overview_pager)
-        overview_pager.currentItem = 1
         overview_pager.offscreenPageLimit = 4
         overview_settings_btn.setOnClickListener {
-            startActivity(SettingsActivity.createIntent(this))
+            startActivity(SettingsActivity.createIntent(context!!))
         }
     }
 
     companion object {
-        fun createIntent(context: Context) = Intent(context, OverviewActivity::class.java)
+        fun newInstance() = AssetsOverviewScreen()
     }
 }
 
-class MyPagerAdapter(fragmentManager: FragmentManager) : FragmentPagerAdapter(fragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
+private class AssetsOverviewAdapter(fragmentManager: FragmentManager) : FragmentPagerAdapter(fragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
 
     // Returns total number of pages
     override fun getCount(): Int {
@@ -43,10 +49,8 @@ class MyPagerAdapter(fragmentManager: FragmentManager) : FragmentPagerAdapter(fr
     // Returns the fragment to display for that page
     override fun getItem(position: Int): Fragment {
         return when (position) {
-            0 -> InstantTransferListScreen.newInstance()
+            0 -> AssetsScreen.newInstance()
             1 -> AssetsScreen.newInstance(true)
-            2 -> AssetsScreen.newInstance()
-            3 -> TransactionsScreen.newInstance()
             else -> throw IllegalArgumentException("unknown position")
         }
     }
@@ -54,16 +58,14 @@ class MyPagerAdapter(fragmentManager: FragmentManager) : FragmentPagerAdapter(fr
     // Returns the page title for the top indicator
     override fun getPageTitle(position: Int): CharSequence? {
         return when (position) {
-            0 -> "Instant Transfers"
+            0 -> "Safe"
             1 -> "Allowances"
-            2 -> "Assets"
-            3 -> "Transactions"
             else -> throw IllegalArgumentException("unknown position")
         }
     }
 
     companion object {
-        private const val NUM_ITEMS = 4
+        private const val NUM_ITEMS = 2
     }
 
 }

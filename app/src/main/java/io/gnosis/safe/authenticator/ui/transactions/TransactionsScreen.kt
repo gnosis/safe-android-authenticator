@@ -108,9 +108,6 @@ class TransactionsScreen : BaseFragment<TransactionsContract.State, Transactions
         transactions_refresh.setOnRefreshListener {
             viewModel.loadTransactions()
         }
-        transactions_add_tx_btn.setOnClickListener {
-            startActivity(NewInstantTransferActivity.createIntent(context!!))
-        }
     }
 
     override fun updateState(state: TransactionsContract.State) {

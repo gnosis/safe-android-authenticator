@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -8,7 +9,7 @@
         android:id="@+id/overview_header_bg"
         android:layout_width="match_parent"
         android:layout_height="@dimen/header_height"
-        android:background="@color/secondaryHeader"
+        android:background="@drawable/header_background"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
@@ -19,7 +20,7 @@
         android:layout_marginTop="8dp"
         android:background="@drawable/selectable_background"
         android:padding="16dp"
-        android:tint="@color/colorPrimary"
+        android:tint="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/ic_settings_24dp" />
@@ -29,21 +30,26 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
+        android:gravity="center"
         android:paddingStart="24dp"
         android:paddingEnd="24dp"
-        android:text="Safe"
-        android:textColor="@color/colorPrimary"
+        android:textColor="@color/white"
         android:textSize="28sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@id/overview_pager_indicator"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="packed" />
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="Assets" />
 
     <com.astuetz.PagerSlidingTabStrip
         android:id="@+id/overview_pager_indicator"
         android:layout_width="match_parent"
         android:layout_height="64dp"
         app:layout_constraintBottom_toBottomOf="@id/overview_header_bg"
+        app:pstsIndicatorHeight="4dp"
+        app:pstsTabPaddingLeftRight="32dp"
+        app:pstsTabTextColor="@color/white"
+        app:pstsIndicatorColor="@color/white"
         app:pstsPaddingMiddle="true" />
 
     <androidx.viewpager.widget.ViewPager

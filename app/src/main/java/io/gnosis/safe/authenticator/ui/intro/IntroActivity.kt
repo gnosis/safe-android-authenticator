@@ -12,11 +12,9 @@ import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.ui.base.BaseActivity
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
-import io.gnosis.safe.authenticator.ui.overview.OverviewActivity
-import io.gnosis.safe.authenticator.utils.asMiddleEllipsized
-import io.gnosis.safe.authenticator.utils.copyToClipboard
-import io.gnosis.safe.authenticator.utils.generateQrCode
-import io.gnosis.safe.authenticator.utils.nullOnThrow
+import io.gnosis.safe.authenticator.ui.overview.MainActivity
+import io.gnosis.safe.authenticator.ui.qr.QRCodeScanActivity
+import io.gnosis.safe.authenticator.utils.*
 import kotlinx.android.synthetic.main.screen_intro.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -82,6 +80,13 @@ class IntroViewModel(
 class IntroActivity : BaseActivity<IntroContract.State, IntroContract>() {
     override val viewModel: IntroContract by viewModel()
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (!QRCodeScanActivity.handleResult(requestCode, resultCode, data, { scanned ->
+                intro_address_input.useAsAddress(scanned)
+            }))
+            super.onActivityResult(requestCode, resultCode, data)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.screen_intro)
@@ -90,11 +95,14 @@ class IntroActivity : BaseActivity<IntroContract.State, IntroContract>() {
                 intro_address_input.text.toString()
             )
         }
+        intro_address_scan.setOnClickListener {
+            QRCodeScanActivity.startForResult(this, "Please scan a Safe address")
+        }
     }
 
     override fun updateState(state: IntroContract.State) {
         if (state.done) {
-            startActivity(OverviewActivity.createIntent(this))
+            startActivity(MainActivity.createIntent(this))
             finish()
             return
         }

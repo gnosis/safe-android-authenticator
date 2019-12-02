@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Safe Authenticator</string>
+    <string name="assets">Assets</string>
+    <string name="transactions">Transactions</string>
 </resources>

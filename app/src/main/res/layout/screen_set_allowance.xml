@@ -77,6 +77,38 @@
             android:layout_height="wrap_content">
 
             <TextView
+                android:id="@+id/set_allowance_delegate_label"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp"
+                android:text="Device"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <EditText
+                android:id="@+id/set_allowance_delegate_input"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="24dp"
+                android:hint="Enter device id if not this device"
+                android:singleLine="true"
+                app:layout_constraintEnd_toStartOf="@+id/set_allowance_delegate_scan"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/set_allowance_delegate_label" />
+
+            <ImageView
+                android:id="@+id/set_allowance_delegate_scan"
+                app:layout_constraintTop_toBottomOf="@id/set_allowance_delegate_label"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_width="wrap_content"
+                android:layout_marginEnd="24dp"
+                android:layout_height="48dp"
+                android:background="@drawable/selectable_background"
+                android:padding="8dp"
+                app:srcCompat="@drawable/ic_scan" />
+
+            <TextView
                 android:id="@+id/set_allowance_token_label"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -84,7 +116,7 @@
                 android:paddingStart="24dp"
                 android:paddingEnd="24dp"
                 android:text="Token"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toBottomOf="@+id/set_allowance_delegate_input" />
 
             <EditText
                 android:id="@+id/set_allowance_token_input"

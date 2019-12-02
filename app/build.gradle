@@ -23,6 +23,7 @@ android {
         buildConfigField javaTypes.STRING, "INSTANT_TRANSFER_SERVICE_URL", asString(getKey("INSTANT_TRANSFER_SERVICE_URL", "https://safe-rinkeby-relay.herokuapp.com/api/"))
 
         buildConfigField javaTypes.STRING, "ALLOWANCE_MODULE", asString(getKey("ALLOWANCE_MODULE", "0xfa546b1E598216c75D087D0b012ED978a726fB7d"))
+        buildConfigField javaTypes.STRING, "MULTI_SEND_ADDRESS", asString(getKey("MULTI_SEND_ADDRESS", "0xe74d6af1670fb6560dd61ee29eb57c7bc027ce4e"))
 
         vectorDrawables.useSupportLibrary = true
         project.ext.set("archivesBaseName", String.format("safe-authenticator-%s", defaultConfig.versionCode))

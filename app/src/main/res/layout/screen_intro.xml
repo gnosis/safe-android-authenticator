@@ -45,6 +45,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:visibility="gone"
+        tools:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/intro_header_bg">
 
@@ -100,12 +101,22 @@
                 android:layout_width="0dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="24dp"
-                android:layout_marginEnd="24dp"
                 android:hint="Enter Address"
                 android:maxLines="1"
-                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/intro_address_scan"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/intro_address_label" />
+
+            <ImageView
+                android:id="@+id/intro_address_scan"
+                app:layout_constraintTop_toBottomOf="@id/intro_address_label"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_width="wrap_content"
+                android:layout_marginEnd="24dp"
+                android:layout_height="48dp"
+                android:background="@drawable/selectable_background"
+                android:padding="8dp"
+                app:srcCompat="@drawable/ic_scan" />
 
             <TextView
                 android:id="@+id/intro_submit_btn"

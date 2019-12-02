@@ -13,4 +13,6 @@
     <color name="pressedShade">#33000000</color>
     <color name="ic_launcher_background">#EFEFEF</color>
     <color name="secondaryHeader">#19252223</color>
+    <color name="headerStart">#00C672</color>
+    <color name="headerEnd">#008C73</color>
 </resources>
