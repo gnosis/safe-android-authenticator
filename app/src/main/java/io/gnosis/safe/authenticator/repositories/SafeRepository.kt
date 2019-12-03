@@ -86,13 +86,6 @@ interface SafeRepository {
         val fees by lazy { (baseGas + txGas) * gasPrice }
     }
 
-    data class TokenInfo(
-        val symbol: String,
-        val decimals: Int,
-        val name: String,
-        val icon: String?
-    )
-
     data class TransactionInfo(
         val recipient: Solidity.Address,
         val recipientLabel: String,
@@ -113,7 +106,7 @@ interface SafeRepository {
     data class InstantTransfer(
         val txHash: String,
         val token: Solidity.Address,
-        val tokenInfo: TokenInfo?,
+        val tokenInfo: TokensRepository.TokenInfo?,
         val to: Solidity.Address,
         val amount: BigInteger,
         val mined: Boolean
@@ -138,10 +131,8 @@ interface SafeRepository {
     suspend fun loadModules(safe: Solidity.Address): List<Solidity.Address>
 
     suspend fun loadTokenBalances(safe: Solidity.Address): List<Pair<Solidity.Address, BigInteger>>
-    suspend fun loadTokenInfo(token: Solidity.Address): TokenInfo
 
     companion object {
-        val ETH_TOKEN_INFO = TokenInfo("ETH", 18, "Ether", null)
         val ALLOWANCE_MODULE_ADDRESS = BuildConfig.ALLOWANCE_MODULE.asEthereumAddress()!!
     }
 }
@@ -151,11 +142,11 @@ class SafeRepositoryImpl(
     private val bip39: Bip39,
     private val encryptionManager: EncryptionManager,
     private val jsonRpcApi: JsonRpcApi,
-    private val relayServiceApi: RelayServiceApi,
     private val transactionServiceApi: TransactionServiceApi,
     private val instantTransferServiceApi: InstantTransferServiceApi,
     private val instantTransferDao: InstantTransferDao,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val tokensRepository: TokensRepository
 ) : SafeRepository {
 
     private val accountPrefs = context.getSharedPreferences(ACC_PREF_NAME, Context.MODE_PRIVATE)
@@ -318,10 +309,10 @@ class SafeRepositoryImpl(
         }
         remoteTransfers.forEach { nullOnThrow { instantTransferDao.delete(it.first) } }
         instantTransferDao.load().map {
-            val tokenInfo = nullOnThrow { loadTokenInfo(it.token) }
+            val tokenInfo = nullOnThrow { tokensRepository.loadTokenInfo(it.token) }
             SafeRepository.InstantTransfer(it.txHash, it.token, tokenInfo, it.to, it.value, false)
         } + remoteTransfers.reversed().map { (txHash, params) ->
-            val tokenInfo = nullOnThrow { loadTokenInfo(params.token) }
+            val tokenInfo = nullOnThrow { tokensRepository.loadTokenInfo(params.token) }
             SafeRepository.InstantTransfer(txHash, params.token, tokenInfo, params.to, params.value.value, true)
         }
     }
@@ -349,20 +340,6 @@ class SafeRepositoryImpl(
             )
         )
         nullOnThrow { instantTransferDao.insert(InstantTransferDb(response.hash, allowance.token, to, amount, allowance.nonce)) }
-    }
-
-    // TODO: optimize
-    private val cachedTokenInfo = HashMap<Solidity.Address, SafeRepository.TokenInfo>()
-
-    override suspend fun loadTokenInfo(token: Solidity.Address): SafeRepository.TokenInfo {
-        if (token == Solidity.Address(BigInteger.ZERO)) return SafeRepository.ETH_TOKEN_INFO
-        return cachedTokenInfo[token] ?: run {
-            relayServiceApi.tokenInfo(token.asEthereumAddressChecksumString()).let {
-                SafeRepository.TokenInfo(it.symbol, it.decimals, it.name, it.logoUri).apply {
-                    cachedTokenInfo[token] = this
-                }
-            }
-        }
     }
 
     override suspend fun loadTokenBalances(safe: Solidity.Address): List<Pair<Solidity.Address, BigInteger>> =
@@ -459,7 +436,7 @@ class SafeRepositoryImpl(
             }
             transaction.data.isSolidityMethod(ERC20Token.Transfer.METHOD_ID) -> { // Token transfer
                 val transferArgs = ERC20Token.Transfer.decodeArguments(transaction.data.removeSolidityMethodPrefix(ERC20Token.Transfer.METHOD_ID))
-                val tokenInfo = nullOnThrow { loadTokenInfo(transaction.to) }
+                val tokenInfo = nullOnThrow { tokensRepository.loadTokenInfo(transaction.to) }
                 val symbol = tokenInfo?.symbol ?: transaction.to.asEthereumAddressChecksumString().asMiddleEllipsized(4)
                 SafeRepository.TransactionInfo(
                     recipient = transferArgs._to,
@@ -471,7 +448,7 @@ class SafeRepositoryImpl(
             }
             transaction.data.isSolidityMethod(ERC20Token.Approve.METHOD_ID) -> { // Token transfer
                 val approveArgs = ERC20Token.Approve.decodeArguments(transaction.data.removeSolidityMethodPrefix(ERC20Token.Transfer.METHOD_ID))
-                val tokenInfo = nullOnThrow { loadTokenInfo(transaction.to) }
+                val tokenInfo = nullOnThrow { tokensRepository.loadTokenInfo(transaction.to) }
                 val symbol = tokenInfo?.symbol ?: transaction.to.asEthereumAddressChecksumString().asMiddleEllipsized(4)
                 SafeRepository.TransactionInfo(
                     recipient = approveArgs._spender,

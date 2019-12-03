@@ -1,0 +1,61 @@
+package io.gnosis.safe.authenticator.repositories
+
+import io.gnosis.safe.authenticator.data.RelayServiceApi
+import io.gnosis.safe.authenticator.db.TokenInfoDao
+import io.gnosis.safe.authenticator.db.TokenInfoDb
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
+import pm.gnosis.model.Solidity
+import java.math.BigInteger
+import java.util.concurrent.ConcurrentHashMap
+
+interface TokensRepository {
+
+    suspend fun loadTokenInfo(token: Solidity.Address): TokenInfo
+
+
+    data class TokenInfo(
+        val address: Solidity.Address,
+        val symbol: String,
+        val decimals: Int,
+        val name: String,
+        val icon: String?
+    )
+
+    companion object {
+        val ETH_ADDRESS = Solidity.Address(BigInteger.ZERO)
+        val ETH_TOKEN_INFO = TokenInfo(ETH_ADDRESS, "ETH", 18, "Ether", null)
+    }
+}
+
+class GnosisServiceTokenRepository(
+    private val relayServiceApi: RelayServiceApi,
+    private val tokenInfoDao: TokenInfoDao
+) : TokensRepository {
+
+    private val pendingTokenInfo = ConcurrentHashMap<Solidity.Address, Deferred<TokenInfoDb>>()
+
+    override suspend fun loadTokenInfo(token: Solidity.Address): TokensRepository.TokenInfo {
+        if (token == TokensRepository.ETH_ADDRESS) return TokensRepository.ETH_TOKEN_INFO
+        val tokenInfo = tokenInfoDao.load(token) ?: loadRemoteInfoAsync(token).await()
+        return tokenInfo.toLocal()
+    }
+
+    private fun loadRemoteInfoAsync(token: Solidity.Address) =
+        pendingTokenInfo.getOrPut(token, {
+            GlobalScope.async {
+                relayServiceApi.tokenInfo(token.asEthereumAddressChecksumString()).let {
+                    TokenInfoDb(token, it.symbol, it.name, it.decimals, it.logoUri ?: "", System.currentTimeMillis()).apply {
+                        tokenInfoDao.insert(this)
+                        @Suppress("DeferredResultUnused")
+                        pendingTokenInfo.remove(token)
+                    }
+                }
+            }
+        })
+
+    private fun TokenInfoDb.toLocal() =
+        TokensRepository.TokenInfo(address, symbol, decimals, name, icon)
+}

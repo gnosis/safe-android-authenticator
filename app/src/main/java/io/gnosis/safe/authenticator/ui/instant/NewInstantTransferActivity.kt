@@ -9,6 +9,7 @@ import android.widget.ArrayAdapter
 import androidx.lifecycle.liveData
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.repositories.SafeRepository
+import io.gnosis.safe.authenticator.repositories.TokensRepository
 import io.gnosis.safe.authenticator.ui.base.BaseActivity
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
@@ -42,7 +43,7 @@ abstract class NewInstantTransferContract : LoadingViewModel<NewInstantTransferC
     data class WrappedAllowance(
         val label: String,
         val token: Solidity.Address,
-        val tokenInfo: SafeRepository.TokenInfo,
+        val tokenInfo: TokensRepository.TokenInfo,
         val allowance: SafeRepository.Allowance
     ) {
         override fun toString(): String {
@@ -53,7 +54,8 @@ abstract class NewInstantTransferContract : LoadingViewModel<NewInstantTransferC
 
 @ExperimentalCoroutinesApi
 class NewInstantTransferViewModel(
-    private val safeRepository: SafeRepository
+    private val safeRepository: SafeRepository,
+    private val tokensRepository: TokensRepository
 ) : NewInstantTransferContract() {
 
     override val state = liveData {
@@ -83,7 +85,7 @@ class NewInstantTransferViewModel(
             updateState { copy(loading = true) }
             val safe = safeRepository.loadSafeAddress()
             val allowances = safeRepository.loadAllowances(safe).map {
-                val tokenInfo = safeRepository.loadTokenInfo(it.token)
+                val tokenInfo = tokensRepository.loadTokenInfo(it.token)
                 WrappedAllowance(
                     "${tokenInfo.symbol} (${(it.amount - it.spent).shiftedString(
                         tokenInfo.decimals

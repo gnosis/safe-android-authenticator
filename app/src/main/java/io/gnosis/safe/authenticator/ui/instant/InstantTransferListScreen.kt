@@ -98,13 +98,9 @@ class InstantTransferListScreen : BaseFragment<InstantTransferListContract.State
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(item: SafeRepository.InstantTransfer) {
-            itemView.pending_tx_target.setAddress(item.to)
-            itemView.pending_tx_confirmations.text = when (item.mined) {
-                true -> "Executed"
-                false -> "Pending"
-            }
-            itemView.pending_tx_value.text = "${item.amount.shiftedString(item.tokenInfo?.decimals ?: 0)} ${item.tokenInfo?.symbol ?: ""}"
-            itemView.pending_tx_description.isVisible = false
+            itemView.tx_info_target.setAddress(item.to)
+            itemView.tx_info_value.text = "${item.amount.shiftedString(item.tokenInfo?.decimals ?: 0)} ${item.tokenInfo?.symbol ?: ""}"
+            itemView.tx_info_description.isVisible = false
         }
     }
 

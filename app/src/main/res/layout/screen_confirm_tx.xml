@@ -3,8 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:paddingBottom="8dp">
+    android:layout_height="wrap_content">
 
     <TextView
         android:id="@+id/confirm_tx_title"
@@ -120,14 +119,12 @@
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
         android:layout_height="4dp"
-        android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"
-        android:progressTint="@color/colorPrimary"
         android:progressBackgroundTint="@color/transparent"
-        tools:progress="50"
+        android:progressTint="@color/colorPrimary"
+        app:layout_constraintTop_toBottomOf="@+id/confirm_tx_fee_lbl"
         tools:max="100"
-        app:layout_constraintTop_toBottomOf="@+id/confirm_tx_fee_lbl" />
+        tools:progress="50" />
 
     <TextView
         android:id="@+id/confirm_tx_submit_btn"
@@ -142,5 +139,6 @@
         android:text="Confirm"
         android:textColor="@color/white"
         android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/confirm_tx_confirmations_indicator" />
 </androidx.constraintlayout.widget.ConstraintLayout>

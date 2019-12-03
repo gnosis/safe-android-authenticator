@@ -17,6 +17,7 @@ import io.gnosis.safe.authenticator.GnosisSafe
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.repositories.SafeRepository.Companion.ALLOWANCE_MODULE_ADDRESS
+import io.gnosis.safe.authenticator.repositories.TokensRepository
 import io.gnosis.safe.authenticator.ui.base.BaseActivity
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
@@ -45,14 +46,15 @@ abstract class ManageAllowancesContract : LoadingViewModel<ManageAllowancesContr
     ) : BaseViewModel.State
 
     data class WrappedAllowance(
-        val tokenInfo: SafeRepository.TokenInfo,
+        val tokenInfo: TokensRepository.TokenInfo,
         val allowance: SafeRepository.Allowance
     )
 }
 
 @ExperimentalCoroutinesApi
 class ManageAllowancesViewModel(
-    private val safeRepository: SafeRepository
+    private val safeRepository: SafeRepository,
+    private val tokensRepository: TokensRepository
 ) : ManageAllowancesContract() {
 
     override val state = liveData {
@@ -91,7 +93,7 @@ class ManageAllowancesViewModel(
                 updateState { copy(accessTx = accessTx) }
             } else updateState { copy(accessTx = null) }
             val allowances = safeRepository.loadAllowances(safe).map {
-                val tokenInfo = safeRepository.loadTokenInfo(it.token)
+                val tokenInfo = tokensRepository.loadTokenInfo(it.token)
                 WrappedAllowance(tokenInfo, it)
             }
             updateState { copy(loading = false, allowances = allowances) }

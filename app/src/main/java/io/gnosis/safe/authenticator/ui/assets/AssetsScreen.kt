@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.repositories.SafeRepository
+import io.gnosis.safe.authenticator.repositories.TokensRepository
 import io.gnosis.safe.authenticator.ui.base.BaseFragment
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
@@ -41,13 +42,14 @@ abstract class AssetsContract : LoadingViewModel<AssetsContract.State>() {
     data class TokenBalance(
         val address: Solidity.Address,
         val balance: BigInteger,
-        val info: SafeRepository.TokenInfo?
+        val info: TokensRepository.TokenInfo?
     )
 }
 
 @ExperimentalCoroutinesApi
 class AssetsViewModel(
-    private val safeRepository: SafeRepository
+    private val safeRepository: SafeRepository,
+    private val tokensRepository: TokensRepository
 ) : AssetsContract() {
 
     override val state = liveData {
@@ -77,7 +79,7 @@ class AssetsViewModel(
                 } else {
                     balance
                 }
-                val info = nullOnThrow { safeRepository.loadTokenInfo(address) }
+                val info = nullOnThrow { tokensRepository.loadTokenInfo(address) }
                 TokenBalance(address, assetValue, info)
             }
             updateState { copy(loading = false, safe = safe, assets = balances) }

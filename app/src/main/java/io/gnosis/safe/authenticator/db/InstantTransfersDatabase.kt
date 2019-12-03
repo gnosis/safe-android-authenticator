@@ -11,11 +11,11 @@ import java.math.BigInteger
     ], version = 1
 )
 @TypeConverters(BigIntegerConverter::class, SolidityAddressConverter::class, EncryptedByteArray.Converter::class)
-abstract class ApplicationDatabase : RoomDatabase() {
+abstract class InstantTransfersDatabase : RoomDatabase() {
     abstract fun instantTransferDao(): InstantTransferDao
 
     companion object {
-        const val DB_NAME = "safe_instant_trasfers_db"
+        const val DB_NAME = "safe_instant_transfers_db"
     }
 }
 

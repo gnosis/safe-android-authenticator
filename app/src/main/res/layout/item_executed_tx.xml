@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="12dp"
+    android:layout_marginBottom="4dp"
+    android:background="@drawable/selectable_background"
+    android:minHeight="56dp">
+
+    <ImageView
+        android:id="@+id/tx_info_type"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@id/tx_info_description"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_goneMarginBottom="16dp" />
+
+    <pm.gnosis.blockies.BlockiesImageView
+        android:id="@+id/tx_info_target"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@id/tx_info_description"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_goneMarginBottom="16dp" />
+
+    <ImageView
+        android:id="@+id/tx_info_execution_state"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginBottom="8dp"
+        android:tint="@color/darkText"
+        app:layout_constraintBottom_toTopOf="@id/tx_info_description"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_goneMarginBottom="16dp"
+        app:srcCompat="@drawable/ic_arrow_forward_24dp" />
+
+    <TextView
+        android:id="@+id/tx_info_value"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:gravity="start"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@id/tx_info_description"
+        app:layout_constraintEnd_toStartOf="@id/tx_info_execution_state"
+        app:layout_constraintStart_toEndOf="@id/tx_info_type"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        app:layout_goneMarginBottom="16dp"
+        tools:text="Ether transfer" />
+
+    <TextView
+        android:id="@+id/tx_info_target_address"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:gravity="end"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@id/tx_info_description"
+        app:layout_constraintEnd_toStartOf="@id/tx_info_target"
+        app:layout_constraintStart_toEndOf="@id/tx_info_execution_state"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        app:layout_goneMarginBottom="16dp"
+        tools:text="Ether transfer" />
+
+    <TextView
+        android:id="@+id/tx_info_description"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:gravity="center"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/tx_info_divider"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="Ether transfer"
+        tools:visibility="gone" />
+
+    <View
+        android:id="@+id/tx_info_divider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginStart="48dp"
+        android:layout_marginEnd="48dp"
+        android:background="@color/divider"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

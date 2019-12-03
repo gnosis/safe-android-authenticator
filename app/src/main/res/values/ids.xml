@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="entry_type_header" type="id" />
+    <item name="entry_type_executed_tx" type="id" />
+    <item name="entry_type_pending_tx" type="id" />
+</resources>

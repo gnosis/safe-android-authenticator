@@ -1,0 +1,58 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "b6b653c894489dbf8e13bbbe9319ef27",
+    "entities": [
+      {
+        "tableName": "instant_transfers",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tx_hash` TEXT NOT NULL, `token` TEXT NOT NULL, `address` TEXT NOT NULL, `value` TEXT NOT NULL, `nonce` TEXT NOT NULL, PRIMARY KEY(`tx_hash`))",
+        "fields": [
+          {
+            "fieldPath": "txHash",
+            "columnName": "tx_hash",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "token",
+            "columnName": "token",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "to",
+            "columnName": "address",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "value",
+            "columnName": "value",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nonce",
+            "columnName": "nonce",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "tx_hash"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b6b653c894489dbf8e13bbbe9319ef27')"
+    ]
+  }
+}
