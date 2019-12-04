@@ -4,10 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingTop="12dp"
     android:layout_marginBottom="4dp"
     android:background="@drawable/selectable_background"
-    android:minHeight="56dp">
+    android:minHeight="56dp"
+    android:paddingTop="12dp">
 
     <ImageView
         android:id="@+id/tx_info_type"
@@ -15,6 +15,7 @@
         android:layout_height="32dp"
         android:layout_marginStart="12dp"
         android:layout_marginBottom="8dp"
+        android:scaleType="centerInside"
         app:layout_constraintBottom_toTopOf="@id/tx_info_description"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"

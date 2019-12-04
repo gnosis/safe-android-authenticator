@@ -26,7 +26,7 @@ fun ImageView.setTransactionIcon(picasso: Picasso, icon: String?) {
         icon?.startsWith("local::") == true -> {
         }
         !icon.isNullOrBlank() ->
-            picasso.load(icon).into(this)
+            picasso.load(icon).transform(CircleTransformation).into(this)
     }
 }
     
