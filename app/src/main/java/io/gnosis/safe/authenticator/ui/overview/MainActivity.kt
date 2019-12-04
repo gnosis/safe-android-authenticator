@@ -15,7 +15,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.screen_main)
-        loadFragment(AssetsOverviewScreen.newInstance())
+        loadFragment(TransactionsOverviewScreen.newInstance())
         main_navigation.setOnNavigationItemSelectedListener {
             loadFragment(when (it.itemId) {
                 R.id.navigation_assets -> AssetsOverviewScreen.newInstance()
@@ -24,6 +24,7 @@ class MainActivity : AppCompatActivity() {
             })
             true
         }
+        main_navigation.setOnNavigationItemReselectedListener {  }
     }
 
 

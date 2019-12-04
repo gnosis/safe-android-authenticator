@@ -26,7 +26,7 @@ interface TokensRepository {
 
     companion object {
         val ETH_ADDRESS = Solidity.Address(BigInteger.ZERO)
-        val ETH_TOKEN_INFO = TokenInfo(ETH_ADDRESS, "ETH", 18, "Ether", null)
+        val ETH_TOKEN_INFO = TokenInfo(ETH_ADDRESS, "ETH", 18, "Ether", "local::ethereum")
     }
 }
 

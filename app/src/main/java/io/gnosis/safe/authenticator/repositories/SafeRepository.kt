@@ -6,7 +6,6 @@ import io.gnosis.safe.authenticator.BuildConfig
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.data.InstantTransferServiceApi
 import io.gnosis.safe.authenticator.data.JsonRpcApi
-import io.gnosis.safe.authenticator.data.RelayServiceApi
 import io.gnosis.safe.authenticator.data.TransactionServiceApi
 import io.gnosis.safe.authenticator.data.models.InstantTransferRequest
 import io.gnosis.safe.authenticator.data.models.ServiceTransaction
@@ -17,7 +16,6 @@ import io.gnosis.safe.authenticator.repositories.SafeRepository.Companion.ALLOWA
 import io.gnosis.safe.authenticator.utils.asMiddleEllipsized
 import io.gnosis.safe.authenticator.utils.nullOnThrow
 import io.gnosis.safe.authenticator.utils.shiftedString
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.rx2.await
 import okio.ByteString
 import org.walleth.khex.toHexString
@@ -117,7 +115,8 @@ interface SafeRepository {
     suspend fun loadPendingTransaction(txHash: String): ServiceSafeTx
     suspend fun loadTransactionInformation(safe: Solidity.Address, transaction: SafeTx): TransactionInfo
 
-    suspend fun loadInstantTransfers(): List<InstantTransfer>
+    suspend fun loadPendingInstantTransfers(): List<InstantTransfer>
+    suspend fun loadExecutedInstantTransfers(): List<InstantTransfer>
     suspend fun performInstantTransfer(
         safe: Solidity.Address,
         delegate: Solidity.Address,
@@ -296,22 +295,31 @@ class SafeRepositoryImpl(
         AllowanceModule.GenerateTransferHash.decode(it).param0.bytes
     }
 
-    override suspend fun loadInstantTransfers(): List<SafeRepository.InstantTransfer> = coroutineScope {
+    override suspend fun loadPendingInstantTransfers(): List<SafeRepository.InstantTransfer> =
+        instantTransferDao.load().map {
+            val tokenInfo = nullOnThrow { tokensRepository.loadTokenInfo(it.token) }
+            SafeRepository.InstantTransfer(it.txHash, it.token, tokenInfo, it.to, it.value, false)
+        }
+
+    override suspend fun loadExecutedInstantTransfers(): List<SafeRepository.InstantTransfer> {
         val safe = loadSafeAddress()
-        val remoteTransfers = jsonRpcApi.logs(JsonRpcApi.JsonRpcRequest(method = "eth_getLogs", params = listOf(mapOf(
-            "fromBlock" to "0x53EC60",
-            "address" to ALLOWANCE_MODULE_ADDRESS.asEthereumAddressString(),
-            "topics" to listOf(AllowanceModule.Events.ExecuteAllowanceTransfer.EVENT_ID.addHexPrefix())
-        )))).result.mapNotNull {
+        val remoteTransfers = jsonRpcApi.logs(
+            JsonRpcApi.JsonRpcRequest(
+                method = "eth_getLogs", params = listOf(
+                    mapOf(
+                        "fromBlock" to "0x53EC60",
+                        "address" to ALLOWANCE_MODULE_ADDRESS.asEthereumAddressString(),
+                        "topics" to listOf(AllowanceModule.Events.ExecuteAllowanceTransfer.EVENT_ID.addHexPrefix())
+                    )
+                )
+            )
+        ).result.mapNotNull {
             val args = AllowanceModule.Events.ExecuteAllowanceTransfer.decode(it.topics.map { it.removeHexPrefix() }, it.data)
             if (args.safe != safe) return@mapNotNull null
             it.transactionHash to args
         }
         remoteTransfers.forEach { nullOnThrow { instantTransferDao.delete(it.first) } }
-        instantTransferDao.load().map {
-            val tokenInfo = nullOnThrow { tokensRepository.loadTokenInfo(it.token) }
-            SafeRepository.InstantTransfer(it.txHash, it.token, tokenInfo, it.to, it.value, false)
-        } + remoteTransfers.reversed().map { (txHash, params) ->
+        return remoteTransfers.reversed().map { (txHash, params) ->
             val tokenInfo = nullOnThrow { tokensRepository.loadTokenInfo(params.token) }
             SafeRepository.InstantTransfer(txHash, params.token, tokenInfo, params.to, params.value.value, true)
         }
@@ -458,15 +466,20 @@ class SafeRepositoryImpl(
                     additionalInfo = "Token approval"
                 )
             }
-            else -> // ETH transfer
+            else -> { // ETH transfer
+                var assetLabel = "${transaction.value.shiftedString(18)} ETH"
+                val hasData = transaction.data.removeHexPrefix().isNotBlank()
+                if (hasData) {
+                    assetLabel += " / ${transaction.data.length / 2 - 1} bytes"
+                }
                 SafeRepository.TransactionInfo(
                     recipient = transaction.to,
                     recipientLabel = transaction.to.asEthereumAddressChecksumString().asMiddleEllipsized(4),
                     assetIcon = "local::ethereum",
-                    assetLabel = "${transaction.value.shiftedString(18)} ETH",
-                    additionalInfo = if (transaction.data.removeHexPrefix().isBlank()) null else "Contract interaction (${transaction.data.length / 2 - 1} bytes)"
+                    assetLabel = assetLabel,
+                    additionalInfo = if (hasData) "Contract interaction: ${transaction.data.addHexPrefix()}" else null
                 )
-
+            }
         }
 
     private fun ServiceTransaction.toLocal() =

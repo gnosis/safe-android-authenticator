@@ -6,4 +6,5 @@
     <dimen name="header_height">160dp</dimen>
     <dimen name="qr_code_size">128dp</dimen>
     <dimen name="icon_padding">8dp</dimen>
+    <dimen name="confirmPeekHeight">144dp</dimen>
 </resources>

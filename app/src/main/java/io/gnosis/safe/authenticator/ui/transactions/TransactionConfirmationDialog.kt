@@ -1,12 +1,14 @@
 package io.gnosis.safe.authenticator.ui.transactions
 
 import android.os.Bundle
+import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
-import androidx.core.view.setPadding
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.*
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_COLLAPSED
+import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.squareup.picasso.Picasso
 import io.gnosis.safe.authenticator.R
@@ -14,6 +16,7 @@ import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
 import io.gnosis.safe.authenticator.utils.nullOnThrow
+import io.gnosis.safe.authenticator.utils.setTransactionIcon
 import io.gnosis.safe.authenticator.utils.shiftedString
 import kotlinx.android.synthetic.main.screen_confirm_tx.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -39,7 +42,15 @@ abstract class TransactionConfirmationContract : LoadingViewModel<TransactionCon
         override var viewAction: ViewAction?
     ) : BaseViewModel.State
 
-    data class TransactionState(val confirmations: Int, val threshold: Int, val canSubmit: Boolean)
+    data class TransactionState(val confirmations: Int, val threshold: Int, val submissionState: SubmissionState)
+
+    enum class SubmissionState {
+        PENDING, // User is not an owner
+        AWAITING_CONFIRMATION, // User can confirm
+        CONFIRMED, // User has confirmed
+        CANCELED, // Tx has been canceled
+        EXECUTED, // Tx has been executed
+    }
 }
 
 @ExperimentalCoroutinesApi
@@ -81,11 +92,17 @@ class TransactionConfirmationViewModel(
             val confirmationCount = transactionInfo?.confirmations?.size ?: 0
             val isOwner = safeInfo.owners.contains(deviceId)
             val hasConfirmed = transactionInfo?.let { it.confirmations.find { (address, _) -> address == deviceId } != null } ?: false
-            val notExecuted = transactionInfo?.executed == false || transactionHash == null
+            val executed = !(transactionInfo?.executed == false || transactionHash == null)
             val txNonce = executionInfo?.nonce ?: safeInfo.currentNonce
-            val canSubmit = isOwner && !hasConfirmed && notExecuted && txNonce >= safeInfo.currentNonce
+            val submissionState = when {
+                executed -> SubmissionState.EXECUTED
+                txNonce > safeInfo.currentNonce -> SubmissionState.CANCELED
+                hasConfirmed -> SubmissionState.CONFIRMED
+                isOwner -> SubmissionState.AWAITING_CONFIRMATION
+                else -> SubmissionState.PENDING
+            }
             val state = TransactionState(
-                confirmationCount, safeInfo.threshold.toInt(), canSubmit
+                confirmationCount, safeInfo.threshold.toInt(), submissionState
             )
             updateState { copy(loading = false, txState = state) }
         }
@@ -129,6 +146,17 @@ class TransactionConfirmationDialog(
 
     private val callback: WeakReference<Callback>? = (callback ?: (activity as? Callback))?.let { WeakReference(it) }
 
+    private val bottomSheetCallback = object: BottomSheetBehavior.BottomSheetCallback() {
+        override fun onSlide(bottomSheet: View, slideOffset: Float) {}
+
+        override fun onStateChanged(bottomSheet: View, newState: Int) {
+            when(newState) {
+                STATE_EXPANDED -> confirm_tx_title.text = "Pull down to close"
+                STATE_COLLAPSED -> confirm_tx_title.text = "Pull up for details"
+            }
+        }
+    }
+
     private val lifecycle = LifecycleRegistry(this)
     override fun getLifecycle() = lifecycle
     override fun getViewModelStore() = ViewModelStore()
@@ -144,6 +172,8 @@ class TransactionConfirmationDialog(
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        behavior.peekHeight = context.resources.getDimension(R.dimen.confirmPeekHeight).toInt()
+        behavior.addBottomSheetCallback(bottomSheetCallback)
         setContentView(R.layout.screen_confirm_tx)
         confirm_tx_submit_btn.setOnClickListener {
             viewModel.confirmTransaction()
@@ -159,35 +189,32 @@ class TransactionConfirmationDialog(
             confirm_tx_target_label.text = it.txInfo?.recipientLabel
             confirm_tx_target_icon.setAddress(it.txInfo?.recipient)
             confirm_tx_description.text = it.txInfo?.additionalInfo
-            confirm_tx_submit_btn.isVisible = it.txState?.canSubmit ?: false
+            when (it.txState?.submissionState) {
+                TransactionConfirmationContract.SubmissionState.AWAITING_CONFIRMATION ->{
+                    confirm_tx_submit_btn.isVisible = true
+                    confirm_tx_status.isVisible = false
+                }
+                TransactionConfirmationContract.SubmissionState.PENDING -> setStatus("Pending", R.color.pending)
+                TransactionConfirmationContract.SubmissionState.CONFIRMED -> setStatus("Confirmed", R.color.confirmed)
+                TransactionConfirmationContract.SubmissionState.CANCELED -> setStatus("Canceled", R.color.rejected)
+                TransactionConfirmationContract.SubmissionState.EXECUTED -> setStatus("Executed", R.color.confirmed)
+                null -> setStatus("Loading", R.color.pending)
+            }
             confirm_tx_confirmations_indicator.max = it.txState?.threshold ?: 0
             confirm_tx_confirmations_indicator.progress = it.txState?.confirmations ?: 0
-            confirm_tx_asset_icon.setPadding(0)
-            confirm_tx_asset_icon.background = null
-            confirm_tx_asset_icon.setImageDrawable(null)
-            confirm_tx_asset_icon.colorFilter = null
-            when {
-                it.txInfo?.assetIcon == "local::ethereum" -> {
-                    confirm_tx_asset_icon.setPadding(context.resources.getDimension(R.dimen.icon_padding).toInt())
-                    confirm_tx_asset_icon.setBackgroundResource(R.drawable.circle_background)
-                    confirm_tx_asset_icon.setImageResource(R.drawable.ic_ethereum_logo)
-                }
-                it.txInfo?.assetIcon == "local::settings" -> {
-                    confirm_tx_asset_icon.setColorFilter(context.getColorCompat(R.color.white))
-                    confirm_tx_asset_icon.setPadding(context.resources.getDimension(R.dimen.icon_padding).toInt())
-                    confirm_tx_asset_icon.setBackgroundResource(R.drawable.circle_background)
-                    confirm_tx_asset_icon.setImageResource(R.drawable.ic_settings_24dp)
-                }
-                it.txInfo?.assetIcon?.startsWith("local::") == true -> {
-                }
-                !it.txInfo?.assetIcon.isNullOrBlank() ->
-                    picasso.load(it.txInfo!!.assetIcon).into(confirm_tx_asset_icon)
-            }
+            confirm_tx_asset_icon.setTransactionIcon(picasso, it.txInfo?.assetIcon)
         })
         lifecycle.currentState = Lifecycle.State.CREATED
         setOnDismissListener {
             lifecycle.currentState = Lifecycle.State.DESTROYED
         }
+    }
+
+    private fun setStatus(message: String, color: Int) {
+        confirm_tx_submit_btn.isVisible = false
+        confirm_tx_status.isVisible = true
+        confirm_tx_status.text = message
+        confirm_tx_status.setBackgroundColor(context.getColorCompat(color))
     }
 
     override fun onStop() {

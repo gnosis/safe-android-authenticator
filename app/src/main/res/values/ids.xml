@@ -3,4 +3,6 @@
     <item name="entry_type_header" type="id" />
     <item name="entry_type_executed_tx" type="id" />
     <item name="entry_type_pending_tx" type="id" />
+    <item name="entry_type_executed_instant_transfer" type="id" />
+    <item name="entry_type_pending_instant_transfer" type="id" />
 </resources>

@@ -8,9 +8,9 @@
     <TextView
         android:id="@+id/confirm_tx_title"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:text="Review transaction"
+        android:layout_height="48dp"
+        android:gravity="center"
+        android:text="Pull up for details"
         android:textColor="@color/darkText"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
@@ -22,7 +22,6 @@
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/confirm_tx_title"
         tools:src="@color/colorPrimary" />
@@ -32,7 +31,6 @@
         android:layout_width="0dp"
         android:layout_height="32dp"
         android:layout_marginStart="4dp"
-        android:layout_marginTop="16dp"
         android:layout_marginEnd="8dp"
         android:gravity="center"
         android:textColor="@color/darkText"
@@ -45,7 +43,6 @@
         android:id="@+id/confirm_tx_target_icon"
         android:layout_width="32dp"
         android:layout_height="32dp"
-        android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/confirm_tx_title"
@@ -56,7 +53,6 @@
         android:layout_width="0dp"
         android:layout_height="32dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="16dp"
         android:layout_marginEnd="4dp"
         android:gravity="center"
         android:textColor="@color/darkText"
@@ -67,52 +63,22 @@
 
     <ImageView
         android:id="@+id/confirm_tx_action_icon"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:padding="4dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="20dp"
         android:tint="@color/colorPrimary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/confirm_tx_title"
         app:srcCompat="@drawable/ic_arrow_forward_24dp" />
 
-    <TextView
-        android:id="@+id/confirm_tx_description"
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/confirm_tx_summary_barrier_bottom"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginEnd="16dp"
-        android:textColor="@color/darkText"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/confirm_tx_asset_icon"
-        tools:text="Please confirm this action" />
-
-    <TextView
-        android:id="@+id/confirm_tx_fee_lbl"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="4dp"
-        android:text="Network fees:"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/confirm_tx_description" />
-
-    <TextView
-        android:id="@+id/confirm_tx_fee_value"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="4dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:gravity="start"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/confirm_tx_fee_lbl"
-        app:layout_constraintTop_toBottomOf="@+id/confirm_tx_description"
-        tools:text="123235345" />
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="confirm_tx_asset_icon,confirm_tx_asset_label,confirm_tx_target_icon,confirm_tx_target_label,confirm_tx_action_icon" />
 
     <ProgressBar
         android:id="@+id/confirm_tx_confirmations_indicator"
@@ -122,7 +88,7 @@
         android:layout_marginTop="8dp"
         android:progressBackgroundTint="@color/transparent"
         android:progressTint="@color/colorPrimary"
-        app:layout_constraintTop_toBottomOf="@+id/confirm_tx_fee_lbl"
+        app:layout_constraintTop_toBottomOf="@id/confirm_tx_summary_barrier_bottom"
         tools:max="100"
         tools:progress="50" />
 
@@ -130,15 +96,72 @@
         android:id="@+id/confirm_tx_submit_btn"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:layout_marginStart="8dp"
         android:layout_marginTop="4dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/primary_button"
+        android:background="@drawable/primary_button_full_width"
         android:gravity="center"
         android:text="Confirm"
         android:textColor="@color/white"
         android:textSize="16sp"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/confirm_tx_confirmations_indicator" />
+
+    <TextView
+        android:id="@+id/confirm_tx_status"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="4dp"
+        android:background="@color/confirmed"
+        android:gravity="center"
+        android:text="Confirmed"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@+id/confirm_tx_submit_btn" />
+
+    <TextView
+        android:id="@+id/confirm_tx_fee_lbl"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="4dp"
+        android:text="Network fees:"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/confirm_tx_status" />
+
+    <TextView
+        android:id="@+id/confirm_tx_fee_value"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="16dp"
+        android:gravity="start"
+        app:layout_constraintBottom_toBottomOf="@+id/confirm_tx_fee_lbl"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/confirm_tx_fee_lbl"
+        app:layout_constraintTop_toTopOf="@+id/confirm_tx_fee_lbl"
+        tools:text="123235345" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/confirm_tx_description_container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:scrollbars="vertical"
+        app:layout_constrainedHeight="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/confirm_tx_fee_value">
+
+        <TextView
+            android:id="@+id/confirm_tx_description"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:textColor="@color/darkText"
+            tools:text="Please confirm this action" />
+    </androidx.core.widget.NestedScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>
