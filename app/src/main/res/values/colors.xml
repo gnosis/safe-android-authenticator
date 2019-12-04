@@ -18,4 +18,5 @@
     <color name="pending">#805D6D74</color>
     <color name="confirmed">#80008C73</color>
     <color name="rejected">#80eb0000</color>
+    <color name="error">#eb0000</color>
 </resources>

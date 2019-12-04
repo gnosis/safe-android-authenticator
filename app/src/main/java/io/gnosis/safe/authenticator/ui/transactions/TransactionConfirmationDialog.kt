@@ -96,7 +96,7 @@ class TransactionConfirmationViewModel(
             val txNonce = executionInfo?.nonce ?: safeInfo.currentNonce
             val submissionState = when {
                 executed -> SubmissionState.EXECUTED
-                txNonce > safeInfo.currentNonce -> SubmissionState.CANCELED
+                txNonce < safeInfo.currentNonce -> SubmissionState.CANCELED
                 hasConfirmed -> SubmissionState.CONFIRMED
                 isOwner -> SubmissionState.AWAITING_CONFIRMATION
                 else -> SubmissionState.PENDING

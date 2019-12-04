@@ -14,6 +14,7 @@ import io.gnosis.safe.authenticator.utils.shiftedString
 import kotlinx.android.synthetic.main.item_header.view.*
 import kotlinx.android.synthetic.main.item_pending_tx.view.*
 import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
+import pm.gnosis.svalinn.common.utils.getColorCompat
 import pm.gnosis.svalinn.common.utils.visible
 import pm.gnosis.utils.asEthereumAddressString
 import pm.gnosis.utils.removeHexPrefix
@@ -115,10 +116,16 @@ class TransactionViewHolder(
         }
         itemView.tx_info_target.setAddress(entry.info?.recipient ?: entry.tx.to)
         itemView.tx_info_target_address.text = entry.info?.recipientLabel ?: entry.tx.to.asEthereumAddressString().asMiddleEllipsized(4)
+        itemView.tx_info_execution_state.setImageResource(R.drawable.ic_arrow_forward_24dp)
+        itemView.tx_info_execution_state.setColorFilter(itemView.context.getColorCompat(R.color.colorPrimary))
         @Suppress("NON_EXHAUSTIVE_WHEN")
         when (entry.state) {
             ListEntry.TransactionMeta.State.CONFIRMED -> itemView.tx_info_confirmation_state.visible(true)
             ListEntry.TransactionMeta.State.PENDING -> itemView.tx_info_confirmation_state.visible(false)
+            ListEntry.TransactionMeta.State.CANCELED -> {
+                itemView.tx_info_execution_state.setImageResource(R.drawable.ic_canceled_24dp)
+                itemView.tx_info_execution_state.setColorFilter(itemView.context.getColorCompat(R.color.error))
+            }
         }
         itemView.tx_info_value.text =
             entry.info?.assetLabel ?: if (entry.tx.data.removeHexPrefix().isBlank()) "ETH transfer" else "Contract interaction"
