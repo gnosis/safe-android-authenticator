@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.squareup.picasso.Picasso
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.repositories.TokensRepository
@@ -18,10 +19,12 @@ import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
 import io.gnosis.safe.authenticator.ui.instant.NewInstantTransferActivity
 import io.gnosis.safe.authenticator.utils.asMiddleEllipsized
 import io.gnosis.safe.authenticator.utils.nullOnThrow
+import io.gnosis.safe.authenticator.utils.setTransactionIcon
 import io.gnosis.safe.authenticator.utils.shiftedString
 import kotlinx.android.synthetic.main.item_token_balance.view.*
 import kotlinx.android.synthetic.main.screen_assets.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
 import pm.gnosis.model.Solidity
@@ -95,6 +98,7 @@ class AssetsViewModel(
 @ExperimentalCoroutinesApi
 class AssetsScreen : BaseFragment<AssetsContract.State, AssetsContract>() {
     override val viewModel: AssetsContract by viewModel()
+    private val picasso: Picasso by inject()
     private lateinit var adapter: BalancesAdapter
     private lateinit var layoutManager: LinearLayoutManager
     private var showOnlyAllowance: Boolean = false
@@ -137,8 +141,9 @@ class AssetsScreen : BaseFragment<AssetsContract.State, AssetsContract>() {
                     startActivity(NewInstantTransferActivity.createIntent(context!!, item.address))
                 }
             }
-            itemView.token_balance_token.text = item.info?.name ?: item.address.asEthereumAddressChecksumString().asMiddleEllipsized(4)
-            itemView.token_balance_amount.text = "${item.balance.shiftedString(item.info?.decimals ?: 0)} ${item.info?.symbol ?: ""}"
+            itemView.token_balance_token.text = item.info?.symbol ?: item.address.asEthereumAddressChecksumString().substring(0, 6)
+            itemView.token_balance_amount.text = item.balance.shiftedString(item.info?.decimals ?: 0)
+            itemView.token_balance_icon.setTransactionIcon(picasso, item.info?.icon)
         }
     }
 

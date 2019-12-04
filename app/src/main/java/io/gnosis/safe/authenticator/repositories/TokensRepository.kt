@@ -8,6 +8,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
 import pm.gnosis.model.Solidity
+import java.lang.Exception
 import java.math.BigInteger
 import java.util.concurrent.ConcurrentHashMap
 
@@ -35,23 +36,32 @@ class GnosisServiceTokenRepository(
     private val tokenInfoDao: TokenInfoDao
 ) : TokensRepository {
 
+    private val lastInit = System.currentTimeMillis()
     private val pendingTokenInfo = ConcurrentHashMap<Solidity.Address, Deferred<TokenInfoDb>>()
 
     override suspend fun loadTokenInfo(token: Solidity.Address): TokensRepository.TokenInfo {
         if (token == TokensRepository.ETH_ADDRESS) return TokensRepository.ETH_TOKEN_INFO
-        val tokenInfo = tokenInfoDao.load(token) ?: loadRemoteInfoAsync(token).await()
+        val localToken = tokenInfoDao.load(token)
+        val tokenInfo = if (shouldLoadRemote(localToken)) loadRemoteInfoAsync(token, localToken).await() else localToken!!
         return tokenInfo.toLocal()
     }
 
-    private fun loadRemoteInfoAsync(token: Solidity.Address) =
+    private fun shouldLoadRemote(token: TokenInfoDb?) = token == null || lastInit > token.lastUpdate
+
+    private fun loadRemoteInfoAsync(token: Solidity.Address, default: TokenInfoDb?) =
         pendingTokenInfo.getOrPut(token, {
             GlobalScope.async {
-                relayServiceApi.tokenInfo(token.asEthereumAddressChecksumString()).let {
-                    TokenInfoDb(token, it.symbol, it.name, it.decimals, it.logoUri ?: "", System.currentTimeMillis()).apply {
-                        tokenInfoDao.insert(this)
-                        @Suppress("DeferredResultUnused")
-                        pendingTokenInfo.remove(token)
+                try {
+                    relayServiceApi.tokenInfo(token.asEthereumAddressChecksumString()).let {
+                        TokenInfoDb(token, it.symbol, it.name, it.decimals, it.logoUri ?: "", System.currentTimeMillis()).apply {
+                            tokenInfoDao.insert(this)
+                            @Suppress("DeferredResultUnused")
+                            pendingTokenInfo.remove(token)
+                        }
                     }
+                } catch (e: Exception) {
+                    // Don't throw if we have a local version
+                    default ?: throw e
                 }
             }
         })

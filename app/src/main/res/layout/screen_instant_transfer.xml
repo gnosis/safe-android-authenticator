@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -98,23 +99,25 @@
             <EditText
                 android:id="@+id/instant_transfer_recipient_input"
                 android:layout_width="0dp"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
+                android:lines="2"
                 android:layout_marginStart="24dp"
                 android:hint="Enter Address"
-                android:singleLine="true"
                 app:layout_constraintEnd_toStartOf="@id/instant_transfer_recipient_scan"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/instant_transfer_recipient_label" />
+                app:layout_constraintTop_toBottomOf="@id/instant_transfer_recipient_label"
+                tools:text="0xfa546b1E598216c75D087D0b012ED978a726fB7d" />
 
             <ImageView
                 android:id="@+id/instant_transfer_recipient_scan"
-                app:layout_constraintTop_toBottomOf="@id/instant_transfer_recipient_label"
-                app:layout_constraintEnd_toEndOf="parent"
                 android:layout_width="wrap_content"
-                android:layout_marginEnd="24dp"
                 android:layout_height="48dp"
+                android:layout_marginEnd="24dp"
                 android:background="@drawable/selectable_background"
                 android:padding="8dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/instant_transfer_recipient_input"
+                app:layout_constraintBottom_toBottomOf="@id/instant_transfer_recipient_input"
                 app:srcCompat="@drawable/ic_scan" />
 
             <TextView
