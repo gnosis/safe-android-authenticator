@@ -11,8 +11,8 @@ android {
         applicationId "io.gnosis.safe.authenticator"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "0.1.0 - Praecox"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField javaTypes.STRING, "BLOCK_EXPLORER_TX", asString(getKey("BLOCK_EXPLORER_TX", "https://rinkeby.etherscan.io/tx/%s"))
