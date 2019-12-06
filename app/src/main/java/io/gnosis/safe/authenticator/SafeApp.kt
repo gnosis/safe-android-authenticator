@@ -15,6 +15,8 @@ import io.gnosis.safe.authenticator.repositories.GnosisServiceTokenRepository
 import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.repositories.SafeRepositoryImpl
 import io.gnosis.safe.authenticator.repositories.TokensRepository
+import io.gnosis.safe.authenticator.services.CrashReporter
+import io.gnosis.safe.authenticator.services.FirebaseCrashReporter
 import io.gnosis.safe.authenticator.ui.assets.AssetsContract
 import io.gnosis.safe.authenticator.ui.assets.AssetsViewModel
 import io.gnosis.safe.authenticator.ui.instant.InstantTransferListContract
@@ -29,6 +31,7 @@ import io.gnosis.safe.authenticator.ui.splash.SplashViewModel
 import io.gnosis.safe.authenticator.ui.transactions.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import okhttp3.OkHttpClient
+import org.koin.android.ext.android.getKoin
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.context.startKoin
@@ -60,6 +63,8 @@ class SafeApp : Application() {
             // modules
             modules(listOf(coreModule, apiModule, repositoryModule, viewModelModule))
         }
+
+        getKoin().get<CrashReporter>().init()
     }
 
 
@@ -87,6 +92,10 @@ class SafeApp : Application() {
 
         single<Bip39> { Bip39Generator(AndroidWordListProvider(get())) }
 
+        single<CrashReporter> { FirebaseCrashReporter() }
+
+        // Storage / Security
+
         single { PreferencesManager(get()) }
 
         single<KeyStorage> { AndroidKeyStorage(get()) }
@@ -94,6 +103,8 @@ class SafeApp : Application() {
         single<FingerprintHelper> { AndroidFingerprintHelper(get()) }
 
         single<EncryptionManager> { AesEncryptionManager(get(), get(), get(), get(), 4096) }
+
+        // Databases
 
         single { Room.databaseBuilder(get(), InstantTransfersDatabase::class.java, InstantTransfersDatabase.DB_NAME).build() }
 

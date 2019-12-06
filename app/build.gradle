@@ -4,6 +4,8 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'bivrost'
+apply plugin: 'io.fabric'
+apply plugin: 'com.google.firebase.appdistribution'
 
 android {
     compileSdkVersion 29
@@ -45,6 +47,9 @@ android {
             applicationIdSuffix ".debug"
             versionNameSuffix "-debug"
             minifyEnabled false
+            firebaseAppDistribution {
+                groups="gnosis"
+            }
         }
         mainnet {
             debuggable true
@@ -59,6 +64,10 @@ android {
             buildConfigField javaTypes.STRING, "INSTANT_TRANSFER_SERVICE_URL", asString(getKey("INSTANT_TRANSFER_SERVICE_URL", "https://safe-mainnet-relay.herokuapp.com/api/"))
 
             buildConfigField javaTypes.STRING, "ALLOWANCE_MODULE", asString(getKey("ALLOWANCE_MODULE", "0x1DB1a2063504D15D36e9506A192ab7BBb17dbb2A"))
+
+            firebaseAppDistribution {
+                groups="gnosis"
+            }
         }
         release {
             minifyEnabled false
@@ -110,6 +119,9 @@ dependencies {
 
     implementation "com.squareup.picasso:picasso:$versions.picasso"
 
+    // Logging
+    implementation "com.jakewharton.timber:timber:$versions.timber"
+
     // Koin for Android
     implementation "org.koin:koin-android:$versions.koin"
     // Koin Android Scope features
@@ -129,7 +141,11 @@ dependencies {
     implementation 'com.google.android.gms:play-services-auth:17.0.0'
     implementation "com.google.zxing:core:$versions.zxing"
 
+    implementation "com.crashlytics.sdk.android:crashlytics:$versions.crashlytics"
+
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 }
+
+apply plugin: 'com.google.gms.google-services'

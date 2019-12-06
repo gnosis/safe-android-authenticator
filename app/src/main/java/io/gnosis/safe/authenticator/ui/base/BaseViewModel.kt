@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ConflatedBroadcastChannel
+import timber.log.Timber
 
 @ExperimentalCoroutinesApi
 abstract class BaseViewModel<T : BaseViewModel.State> : ViewModel() {
@@ -26,7 +27,7 @@ abstract class BaseViewModel<T : BaseViewModel.State> : ViewModel() {
 
     protected val coroutineErrorHandler by lazy {
         CoroutineExceptionHandler { _, e ->
-            e.printStackTrace()
+            Timber.e(e)
             viewModelScope.launch { updateState(true) { viewAction = ShowToast(e.message ?: "An error occurred"); this } }
         }
     }
@@ -42,8 +43,7 @@ abstract class BaseViewModel<T : BaseViewModel.State> : ViewModel() {
             stateChannel.send(nextState)
         } catch (e: Exception) {
             // Could not submit update
-            e.printStackTrace()
-            Log.e("#####", "error: $e")
+            Timber.e(e)
         }
     }
 
