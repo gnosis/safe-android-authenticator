@@ -4,10 +4,10 @@ import android.app.Application
 import androidx.room.Room
 import com.squareup.moshi.Moshi
 import com.squareup.picasso.Picasso
+import io.gnosis.safe.authenticator.data.InstantTransferServiceApi
 import io.gnosis.safe.authenticator.data.JsonRpcApi
 import io.gnosis.safe.authenticator.data.RelayServiceApi
 import io.gnosis.safe.authenticator.data.TransactionServiceApi
-import io.gnosis.safe.authenticator.data.InstantTransferServiceApi
 import io.gnosis.safe.authenticator.data.adapter.*
 import io.gnosis.safe.authenticator.db.InstantTransfersDatabase
 import io.gnosis.safe.authenticator.db.TokensDatabase
@@ -46,6 +46,7 @@ import pm.gnosis.svalinn.security.impls.AndroidFingerprintHelper
 import pm.gnosis.svalinn.security.impls.AndroidKeyStorage
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import java.util.concurrent.TimeUnit
 
 @ExperimentalCoroutinesApi
 class SafeApp : Application() {
@@ -66,7 +67,13 @@ class SafeApp : Application() {
 
         single { Picasso.get() }
 
-        single { OkHttpClient.Builder().build() }
+        single {
+            OkHttpClient.Builder()
+                .connectTimeout(20, TimeUnit.SECONDS)
+                .readTimeout(20, TimeUnit.SECONDS)
+                .writeTimeout(20, TimeUnit.SECONDS)
+                .build()
+        }
 
         single {
             Moshi.Builder()

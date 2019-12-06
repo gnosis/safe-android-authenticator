@@ -71,21 +71,23 @@ class AssetsViewModel(
         loadingLaunch {
             updateState { copy(loading = true) }
             val safe = safeRepository.loadSafeAddress()
-            val allowances = safeRepository.loadAllowances(safe)
-            val balances = safeRepository.loadTokenBalances(safe).mapNotNull { (address, balance) ->
-                val assetValue: BigInteger
-                assetValue = if (showOnlyAllowance) {
+            val safeTokens = safeRepository.loadTokenBalances(safe)
+            val balances = if (showOnlyAllowance) {
+                val allowances = safeRepository.loadAllowances(safe)
+                safeTokens.mapNotNull { (address, balance) ->
                     val allowance = allowances.find { it.token == address } ?: return@mapNotNull null
                     val remaining = allowance.amount - allowance.spent
                     if (remaining <= BigInteger.ZERO) return@mapNotNull null
-                    balance.min(remaining)
-                } else {
-                    balance
+                    address to balance.min(remaining)
                 }
-                val info = nullOnThrow { tokensRepository.loadTokenInfo(address) }
-                TokenBalance(address, assetValue, info)
+            } else {
+                safeTokens
             }
-            updateState { copy(loading = false, safe = safe, assets = balances) }
+            val balancesWithTokenInfo = balances.map { (address, balance) ->
+                val info = nullOnThrow { tokensRepository.loadTokenInfo(address) }
+                TokenBalance(address, balance, info)
+            }
+            updateState { copy(loading = false, safe = safe, assets = balancesWithTokenInfo) }
         }
     }
 

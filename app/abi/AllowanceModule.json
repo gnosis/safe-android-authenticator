@@ -105,7 +105,7 @@
         },
         {
           "internalType": "uint32",
-          "name": "lastTransferMin",
+          "name": "lastResetMin",
           "type": "uint32"
         },
         {
@@ -225,7 +225,7 @@
       "anonymous": false,
       "inputs": [
         {
-          "indexed": false,
+          "indexed": true,
           "internalType": "address",
           "name": "safe",
           "type": "address"
@@ -244,7 +244,7 @@
       "anonymous": false,
       "inputs": [
         {
-          "indexed": false,
+          "indexed": true,
           "internalType": "address",
           "name": "safe",
           "type": "address"
@@ -263,7 +263,7 @@
       "anonymous": false,
       "inputs": [
         {
-          "indexed": false,
+          "indexed": true,
           "internalType": "address",
           "name": "safe",
           "type": "address"
@@ -291,6 +291,12 @@
           "internalType": "uint96",
           "name": "value",
           "type": "uint96"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint16",
+          "name": "nonce",
+          "type": "uint16"
         }
       ],
       "name": "ExecuteAllowanceTransfer",
@@ -300,7 +306,7 @@
       "anonymous": false,
       "inputs": [
         {
-          "indexed": false,
+          "indexed": true,
           "internalType": "address",
           "name": "safe",
           "type": "address"
@@ -355,6 +361,11 @@
           "internalType": "uint16",
           "name": "resetTimeMin",
           "type": "uint16"
+        },
+        {
+          "internalType": "uint32",
+          "name": "resetBaseMin",
+          "type": "uint32"
         }
       ],
       "name": "setAllowance",

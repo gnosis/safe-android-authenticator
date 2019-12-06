@@ -14,7 +14,6 @@ fun ImageView.setTransactionIcon(picasso: Picasso, icon: String?) {
     when {
         icon == "local::ethereum" -> {
             setPadding(context.resources.getDimension(R.dimen.icon_padding).toInt())
-            setBackgroundResource(R.drawable.circle_background)
             setImageResource(R.drawable.ic_ethereum_logo)
         }
         icon == "local::settings" -> {
@@ -24,9 +23,17 @@ fun ImageView.setTransactionIcon(picasso: Picasso, icon: String?) {
             setImageResource(R.drawable.ic_settings_24dp)
         }
         icon?.startsWith("local::") == true -> {
+            setImageResource(R.drawable.circle_background)
         }
         !icon.isNullOrBlank() ->
-            picasso.load(icon).transform(CircleTransformation).into(this)
+            picasso
+                .load(icon)
+                .placeholder(R.drawable.circle_background)
+                .error(R.drawable.circle_background)
+                .transform(CircleTransformation)
+                .into(this)
+        else ->
+            setImageResource(R.drawable.circle_background)
     }
 }
     

@@ -17,9 +17,9 @@ import io.gnosis.safe.authenticator.utils.useAsAddress
 import kotlinx.android.synthetic.main.screen_set_allowance.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
 import pm.gnosis.model.Solidity
-import pm.gnosis.utils.*
+import pm.gnosis.utils.asEthereumAddress
+import pm.gnosis.utils.decimalAsBigInteger
 import java.math.BigInteger
 
 @ExperimentalCoroutinesApi
@@ -63,7 +63,7 @@ class SetAllowanceViewModel(
             val allowanceValue = allowance.decimalAsBigInteger()
             val resetPeriodValue = resetPeriod.decimalAsBigInteger()
             val setAllowanceData = AllowanceModule.SetAllowance.encode(
-                delegateAddress, tokenAddress, Solidity.UInt96(allowanceValue), Solidity.UInt16(resetPeriodValue)
+                delegateAddress, tokenAddress, Solidity.UInt96(allowanceValue), Solidity.UInt16(resetPeriodValue), Solidity.UInt32(resetPeriodValue)
             )
             val delegates = safeRepository.loadAllowancesDelegates(safe)
             val allowanceTx = SafeRepository.SafeTx(
@@ -121,8 +121,8 @@ class SetAllowanceActivity : BaseActivity<SetAllowanceContract.State, SetAllowan
 
     override fun performAction(viewAction: BaseViewModel.ViewAction) {
         when (viewAction) {
-           is SetAllowanceContract.ConfirmTransaction ->
-               TransactionConfirmationDialog(this, viewAction.safe, null, viewAction.tx, null).show()
+            is SetAllowanceContract.ConfirmTransaction ->
+                TransactionConfirmationDialog(this, viewAction.safe, null, viewAction.tx, null).show()
             else -> super.performAction(viewAction)
         }
     }

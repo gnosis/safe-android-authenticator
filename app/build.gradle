@@ -22,7 +22,7 @@ android {
         buildConfigField javaTypes.STRING, "TRANSACTION_SERVICE_URL", asString(getKey("TRANSACTION_SERVICE_URL", "https://safe-transaction.rinkeby.gnosis.io/api/"))
         buildConfigField javaTypes.STRING, "INSTANT_TRANSFER_SERVICE_URL", asString(getKey("INSTANT_TRANSFER_SERVICE_URL", "https://safe-rinkeby-relay.herokuapp.com/api/"))
 
-        buildConfigField javaTypes.STRING, "ALLOWANCE_MODULE", asString(getKey("ALLOWANCE_MODULE", "0xfa546b1E598216c75D087D0b012ED978a726fB7d"))
+        buildConfigField javaTypes.STRING, "ALLOWANCE_MODULE", asString(getKey("ALLOWANCE_MODULE", "0xb4f7291fA058fbcbdcBb347647459aCb2f714a80"))
         buildConfigField javaTypes.STRING, "MULTI_SEND_ADDRESS", asString(getKey("MULTI_SEND_ADDRESS", "0xe74d6af1670fb6560dd61ee29eb57c7bc027ce4e"))
 
         vectorDrawables.useSupportLibrary = true
@@ -46,11 +46,19 @@ android {
             versionNameSuffix "-debug"
             minifyEnabled false
         }
-        temp {
-            applicationIdSuffix ".temp"
-            versionNameSuffix "-temp"
+        mainnet {
+            debuggable true
+            applicationIdSuffix ".mainnet"
+            versionNameSuffix "-mainnet"
             minifyEnabled false
             signingConfig signingConfigs.debug
+            buildConfigField javaTypes.STRING, "BLOCK_EXPLORER_TX", asString(getKey("BLOCK_EXPLORER_TX", "https://etherscan.io/tx/%s"))
+            buildConfigField javaTypes.STRING, "BLOCKCHAIN_NET_URL", asString(getKey("BLOCKCHAIN_NET_URL", "https://mainnet.infura.io/v3/"))
+            buildConfigField javaTypes.STRING, "RELAY_SERVICE_URL", asString(getKey("RELAY_SERVICE_URL", "https://safe-relay.gnosis.io/api/"))
+            buildConfigField javaTypes.STRING, "TRANSACTION_SERVICE_URL", asString(getKey("TRANSACTION_SERVICE_URL", "https://safe-transaction.gnosis.io/api/"))
+            buildConfigField javaTypes.STRING, "INSTANT_TRANSFER_SERVICE_URL", asString(getKey("INSTANT_TRANSFER_SERVICE_URL", "https://safe-mainnet-relay.herokuapp.com/api/"))
+
+            buildConfigField javaTypes.STRING, "ALLOWANCE_MODULE", asString(getKey("ALLOWANCE_MODULE", "0x1DB1a2063504D15D36e9506A192ab7BBb17dbb2A"))
         }
         release {
             minifyEnabled false
