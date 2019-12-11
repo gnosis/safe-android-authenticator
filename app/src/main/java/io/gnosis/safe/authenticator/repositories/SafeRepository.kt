@@ -18,7 +18,6 @@ import io.gnosis.safe.authenticator.utils.nullOnThrow
 import io.gnosis.safe.authenticator.utils.shiftedString
 import kotlinx.coroutines.rx2.await
 import okio.ByteString
-import org.walleth.khex.toHexString
 import pm.gnosis.crypto.ECDSASignature
 import pm.gnosis.crypto.KeyGenerator
 import pm.gnosis.crypto.KeyPair

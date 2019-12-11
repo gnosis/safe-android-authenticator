@@ -148,7 +148,7 @@ class SafeApp : Application() {
             val baseClient: OkHttpClient = get()
             val client = baseClient.newBuilder().addInterceptor {
                 val request = it.request()
-                val builder = request.url().newBuilder()
+                val builder = request.url.newBuilder()
                 val url = builder.addPathSegment(BuildConfig.INFURA_API_KEY).build()
                 it.proceed(request.newBuilder().url(url).build())
             }.build()

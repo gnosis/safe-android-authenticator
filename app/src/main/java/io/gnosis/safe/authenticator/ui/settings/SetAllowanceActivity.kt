@@ -13,6 +13,7 @@ import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
 import io.gnosis.safe.authenticator.ui.qr.QRCodeScanActivity
 import io.gnosis.safe.authenticator.ui.transactions.TransactionConfirmationDialog
 import io.gnosis.safe.authenticator.utils.MultiSendTransactionBuilder
+import io.gnosis.safe.authenticator.utils.nullOnThrow
 import io.gnosis.safe.authenticator.utils.useAsAddress
 import kotlinx.android.synthetic.main.screen_set_allowance.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -48,6 +49,12 @@ class SetAllowanceViewModel(
         for (event in stateChannel.openSubscription()) emit(event)
     }
 
+    private inline fun <T> parseInput(errorMsg: String, func: () -> T?): T = try {
+        func.invoke()!!
+    } catch (e: Exception) {
+        throw IllegalArgumentException(errorMsg, e)
+    }
+
     override fun setAllowance(
         delegate: String,
         token: String,
@@ -58,10 +65,12 @@ class SetAllowanceViewModel(
         loadingLaunch {
             updateState { copy(loading = true) }
             val safe = safeRepository.loadSafeAddress()
-            val delegateAddress = if (delegate.isBlank()) safeRepository.loadDeviceId() else delegate.asEthereumAddress()!!
-            val tokenAddress = token.asEthereumAddress()!!
-            val allowanceValue = allowance.decimalAsBigInteger()
-            val resetPeriodValue = resetPeriod.decimalAsBigInteger()
+            val delegateAddress =
+                if (delegate.isBlank()) safeRepository.loadDeviceId()
+                else parseInput("Invalid delegate address") { delegate.asEthereumAddress() }
+            val tokenAddress = parseInput("Invalid token address") { token.asEthereumAddress() }
+            val allowanceValue = parseInput("Invalid allowance value") { allowance.decimalAsBigInteger() }
+            val resetPeriodValue = parseInput("Invalid reset period") { resetPeriod.decimalAsBigInteger() }
             val setAllowanceData = AllowanceModule.SetAllowance.encode(
                 delegateAddress, tokenAddress, Solidity.UInt96(allowanceValue), Solidity.UInt16(resetPeriodValue), Solidity.UInt32(resetPeriodValue)
             )

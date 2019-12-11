@@ -18,12 +18,12 @@ object MultiSendTransactionBuilder {
             MULTI_SEND_LIB, BigInteger.ZERO, MultiSend.MultiSend.encode(
                     Solidity.Bytes(
                         transactions.joinToString(separator = "") {
-                            SolidityBase.encodeFunctionArguments(
-                                Solidity.UInt8(it.operation.id.toBigInteger()), // Operation
-                                it.to, // To
-                                Solidity.UInt256(it.value), // Value
-                                Solidity.Bytes(it.data.hexStringToByteArray()) // Data
-                            )
+                            val data = it.data.hexStringToByteArray()
+                            Solidity.UInt8(it.operation.id.toBigInteger()).encodePacked() + // Operation
+                                    it.to.encodePacked() + // To
+                                    Solidity.UInt256(it.value).encodePacked() + // Value
+                                    Solidity.UInt256(data.size.toBigInteger()).encodePacked() + // Data length
+                                    Solidity.Bytes(data).encodePacked() // Data
                         }.hexStringToByteArray()
                     )
                 ), SafeRepository.SafeTx.Operation.DELEGATE
