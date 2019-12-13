@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -20,8 +21,11 @@
         android:layout_gravity="bottom"
         android:background="?android:attr/windowBackground"
         android:foreground="?attr/selectableItemBackground"
-        app:itemIconTint="@color/colorPrimary"
-        app:itemTextColor="@color/colorPrimary"
+        app:itemIconTint="@color/nav_bottom"
+        app:itemTextColor="@color/nav_bottom"
+        app:itemTextAppearanceActive="@style/NavBottom"
+        app:itemTextAppearanceInactive="@style/NavBottom"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:menu="@menu/navigation" />
+        app:menu="@menu/navigation"
+        tools:layout_editor_absoluteX="0dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>

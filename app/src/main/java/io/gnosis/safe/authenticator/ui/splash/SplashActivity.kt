@@ -2,27 +2,16 @@ package io.gnosis.safe.authenticator.ui.splash
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
-import android.os.Bundle
-import android.widget.Toast
-import androidx.core.view.isVisible
 import androidx.lifecycle.liveData
-import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.ui.base.BaseActivity
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
-import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
+import io.gnosis.safe.authenticator.ui.intro.ConnectSafeActivity
 import io.gnosis.safe.authenticator.ui.intro.IntroActivity
 import io.gnosis.safe.authenticator.ui.overview.MainActivity
-import io.gnosis.safe.authenticator.utils.asMiddleEllipsized
-import io.gnosis.safe.authenticator.utils.copyToClipboard
-import io.gnosis.safe.authenticator.utils.generateQrCode
 import io.gnosis.safe.authenticator.utils.nullOnThrow
-import kotlinx.android.synthetic.main.screen_intro.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
-import pm.gnosis.utils.asEthereumAddress
 
 @ExperimentalCoroutinesApi
 abstract class SplashContract : BaseViewModel<SplashContract.State>() {

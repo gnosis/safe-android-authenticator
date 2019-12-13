@@ -2,133 +2,92 @@ package io.gnosis.safe.authenticator.ui.intro
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
 import android.os.Bundle
-import android.widget.Toast
-import androidx.core.view.isVisible
-import androidx.lifecycle.liveData
+import android.os.CountDownTimer
+import android.os.Handler
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.os.postDelayed
+import androidx.viewpager.widget.PagerAdapter
+import androidx.viewpager.widget.ViewPager
 import io.gnosis.safe.authenticator.R
-import io.gnosis.safe.authenticator.repositories.SafeRepository
-import io.gnosis.safe.authenticator.ui.base.BaseActivity
-import io.gnosis.safe.authenticator.ui.base.BaseViewModel
-import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
-import io.gnosis.safe.authenticator.ui.overview.MainActivity
-import io.gnosis.safe.authenticator.ui.qr.QRCodeScanActivity
-import io.gnosis.safe.authenticator.utils.*
 import kotlinx.android.synthetic.main.screen_intro.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import org.koin.androidx.viewmodel.ext.android.viewModel
-import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
-import pm.gnosis.utils.asEthereumAddress
 
-@ExperimentalCoroutinesApi
-abstract class IntroContract : LoadingViewModel<IntroContract.State>() {
-    abstract fun setSafe(address: String)
+class IntroActivity : AppCompatActivity() {
 
-    data class State(
-        val deviceId: String?,
-        val deviceIdQR: Bitmap?,
-        val done: Boolean,
-        val loading: Boolean,
-        override var viewAction: ViewAction?
-    ) :
-        BaseViewModel.State
-}
-
-@ExperimentalCoroutinesApi
-class IntroViewModel(
-    private val safeRepository: SafeRepository
-) : IntroContract() {
-
-    override val state = liveData {
-        checkState()
-        for (event in stateChannel.openSubscription()) emit(event)
-    }
-
-    private fun checkState() {
-        loadingLaunch {
-            updateState { copy(loading = true) }
-            val deviceId = safeRepository.loadDeviceId()
-            updateState {
-                copy(
-                    deviceId = deviceId.asEthereumAddressChecksumString(),
-                    deviceIdQR = deviceId.asEthereumAddressChecksumString().generateQrCode(200, 200)
-                )
-            }
-            val isReady = nullOnThrow { safeRepository.loadSafeAddress() } != null
-            updateState { copy(loading = false, done = isReady) }
+    private val viewPagerTimer = object: CountDownTimer(PAGE_AUTO_SCROLL_TIME_MS, PAGE_AUTO_SCROLL_TIME_MS) {
+        override fun onFinish() {
+            intro_view_pager.currentItem = (intro_view_pager.currentItem + 1) % layouts.size
+            start()
         }
-    }
 
-    override fun setSafe(address: String) {
-        if (currentState().loading) return
-        loadingLaunch {
-            updateState { copy(loading = true) }
-            val address = address.asEthereumAddress()!!
-            safeRepository.setSafeAddress(address)
-            updateState { copy(loading = false, done = true) }
-        }
-    }
-
-    override fun onLoadingError(state: State, e: Throwable) = state.copy(loading = false)
-
-    override fun initialState() = State(null, null, false, false, null)
-
-}
-
-@ExperimentalCoroutinesApi
-class IntroActivity : BaseActivity<IntroContract.State, IntroContract>() {
-    override val viewModel: IntroContract by viewModel()
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (!QRCodeScanActivity.handleResult(requestCode, resultCode, data, { scanned ->
-                intro_address_input.useAsAddress(scanned)
-            }))
-            super.onActivityResult(requestCode, resultCode, data)
+        override fun onTick(p0: Long) {}
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.screen_intro)
-        intro_submit_btn.setOnClickListener {
-            viewModel.setSafe(
-                intro_address_input.text.toString()
-            )
+        intro_view_pager.adapter = pagerAdapter
+        intro_pager_indicator.setViewPager(intro_view_pager)
+        intro_get_started_btn.setOnClickListener {
+            startActivity(ConnectSafeActivity.createIntent(this))
         }
-        intro_address_scan.setOnClickListener {
-            QRCodeScanActivity.startForResult(this, "Please scan a Safe address")
-        }
+        intro_view_pager.addOnPageChangeListener(object: ViewPager.OnPageChangeListener {
+            override fun onPageScrollStateChanged(state: Int) {
+                when(state) {
+                    ViewPager.SCROLL_STATE_IDLE -> viewPagerTimer.start()
+                    else -> viewPagerTimer.cancel()
+                }
+            }
+
+            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
+
+            override fun onPageSelected(position: Int) {}
+
+        })
     }
 
-    override fun updateState(state: IntroContract.State) {
-        if (state.done) {
-            startActivity(MainActivity.createIntent(this))
-            finish()
-            return
+    override fun onStart() {
+        super.onStart()
+        viewPagerTimer.start()
+    }
+
+    override fun onPause() {
+        viewPagerTimer.cancel()
+        super.onPause()
+    }
+
+    private val layouts =
+        listOf(
+            R.layout.screen_intro_slider_first,
+            R.layout.screen_intro_slider_second,
+            R.layout.screen_intro_slider_third
+        )
+
+    private val pagerAdapter = object : PagerAdapter() {
+
+        override fun instantiateItem(container: ViewGroup, position: Int): Any {
+            val id = layouts[position]
+            val layout = LayoutInflater.from(container.context).inflate(id, container, false) as ViewGroup
+            container.addView(layout)
+            return layout
         }
-        intro_content_scroll.isVisible = !state.loading
-        intro_progress.isVisible = state.loading
-        intro_device_id_qr.setImageBitmap(state.deviceIdQR)
-        intro_device_id.text = state.deviceId?.asMiddleEllipsized(4)
-        if (state.deviceId != null) {
-            intro_device_id_qr.setOnClickListener {
-                copyToClipboard("Your authenticator", state.deviceId) {
-                    Toast.makeText(this@IntroActivity, "Copied device id to clipboard!", Toast.LENGTH_SHORT).show()
-                }
+
+        override fun destroyItem(container: ViewGroup, position: Int, any: Any) {
+            (any as? View)?.let {
+                container.removeView(it)
             }
-            intro_device_id.setOnClickListener {
-                copyToClipboard("Your authenticator", state.deviceId) {
-                    Toast.makeText(this@IntroActivity, "Copied device id to clipboard!", Toast.LENGTH_SHORT).show()
-                }
-            }
-        } else {
-            intro_device_id_qr.setOnClickListener(null)
-            intro_device_id.setOnClickListener(null)
         }
+
+        override fun isViewFromObject(view: View, any: Any) = view == any
+
+        override fun getCount(): Int = layouts.size
     }
 
     companion object {
+        private const val PAGE_AUTO_SCROLL_TIME_MS = 3000L
         fun createIntent(context: Context) = Intent(context, IntroActivity::class.java)
     }
-
 }

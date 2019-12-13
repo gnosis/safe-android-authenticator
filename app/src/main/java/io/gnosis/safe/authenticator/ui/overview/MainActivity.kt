@@ -15,16 +15,19 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.screen_main)
-        loadFragment(AssetsOverviewScreen.newInstance())
         main_navigation.setOnNavigationItemSelectedListener {
-            loadFragment(when (it.itemId) {
-                R.id.navigation_assets -> AssetsOverviewScreen.newInstance()
-                R.id.navigation_transactions -> TransactionsOverviewScreen.newInstance()
-                else -> throw IllegalStateException("Unknown menu item")
-            })
+            loadFragment(
+                when (it.itemId) {
+                    R.id.navigation_assets -> AssetsOverviewScreen.newInstance()
+                    R.id.navigation_transactions -> TransactionsOverviewScreen.newInstance()
+                    else -> throw IllegalStateException("Unknown menu item")
+                }
+            )
             true
         }
-        main_navigation.setOnNavigationItemReselectedListener {  }
+        main_navigation.selectedItemId = R.id.navigation_assets
+        main_navigation.itemTextAppearanceActive = main_navigation.itemTextAppearanceInactive
+        main_navigation.setOnNavigationItemReselectedListener { }
     }
 
 
@@ -35,6 +38,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        fun createIntent(context: Context) = Intent(context, MainActivity::class.java)
+        fun createIntent(context: Context) = Intent(context, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
     }
 }
