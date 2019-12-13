@@ -14,6 +14,7 @@
     <color name="ic_launcher_background">#EFEFEF</color>
     <color name="secondaryHeader">#19252223</color>
     <color name="headerStart">#00C672</color>
+    <color name="valid">#00C672</color>
     <color name="headerEnd">#008C73</color>
     <color name="pending">#805D6D74</color>
     <color name="confirmed">#80008C73</color>

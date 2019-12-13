@@ -27,6 +27,7 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".ui.intro.ConnectSafeActivity"
+            android:windowSoftInputMode="adjustPan"
             android:screenOrientation="portrait" />
         <activity
             android:name=".ui.overview.MainActivity"
