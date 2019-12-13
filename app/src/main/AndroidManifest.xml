@@ -14,8 +14,8 @@
         <activity
             android:name=".ui.splash.SplashActivity"
             android:launchMode="singleTop"
-            android:theme="@style/SplashTheme"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -24,7 +24,9 @@
         </activity>
         <activity
             android:name=".ui.intro.IntroActivity"
-            android:launchMode="singleTop"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.intro.ConnectSafeActivity"
             android:screenOrientation="portrait" />
         <activity
             android:name=".ui.overview.MainActivity"
@@ -45,11 +47,13 @@
         <activity
             android:name=".ui.settings.SetAllowanceActivity"
             android:screenOrientation="portrait" />
-        <activity android:name="io.gnosis.safe.authenticator.ui.qr.QRCodeScanActivity"
+        <activity
+            android:name="io.gnosis.safe.authenticator.ui.qr.QRCodeScanActivity"
             android:screenOrientation="portrait" />
     </application>
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
+
     <dist:module dist:instant="true" />
 </manifest>

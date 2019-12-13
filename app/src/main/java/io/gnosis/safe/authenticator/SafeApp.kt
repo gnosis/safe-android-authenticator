@@ -23,8 +23,8 @@ import io.gnosis.safe.authenticator.ui.instant.InstantTransferListContract
 import io.gnosis.safe.authenticator.ui.instant.InstantTransferListViewModel
 import io.gnosis.safe.authenticator.ui.instant.NewInstantTransferContract
 import io.gnosis.safe.authenticator.ui.instant.NewInstantTransferViewModel
-import io.gnosis.safe.authenticator.ui.intro.IntroContract
-import io.gnosis.safe.authenticator.ui.intro.IntroViewModel
+import io.gnosis.safe.authenticator.ui.intro.ConnectSafeContract
+import io.gnosis.safe.authenticator.ui.intro.ConnectSafeViewModel
 import io.gnosis.safe.authenticator.ui.settings.*
 import io.gnosis.safe.authenticator.ui.splash.SplashContract
 import io.gnosis.safe.authenticator.ui.splash.SplashViewModel
@@ -169,7 +169,7 @@ class SafeApp : Application() {
     @ExperimentalCoroutinesApi
     private val viewModelModule = module {
         viewModel<SplashContract> { SplashViewModel(get(), get()) }
-        viewModel<IntroContract> { IntroViewModel(get()) }
+        viewModel<ConnectSafeContract> { ConnectSafeViewModel(get()) }
         viewModel<AssetsContract> { AssetsViewModel(get(), get()) }
         viewModel<TransactionsContract> { TransactionsViewModel(get()) }
         viewModel<SettingsContract> { SettingsViewModel(get()) }

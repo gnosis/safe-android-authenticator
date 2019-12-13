@@ -1,6 +1,5 @@
 package io.gnosis.safe.authenticator.ui.base
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -49,4 +48,9 @@ abstract class BaseViewModel<T : BaseViewModel.State> : ViewModel() {
 
     protected fun safeLaunch(errorHandler: CoroutineExceptionHandler = coroutineErrorHandler, block: suspend CoroutineScope.() -> Unit) =
         viewModelScope.launch(Dispatchers.IO + errorHandler, block = block)
+
+    override fun onCleared() {
+        super.onCleared()
+        stateChannel.close()
+    }
 }

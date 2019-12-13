@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:fillViewport="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ImageView
+            android:layout_width="240dp"
+            android:layout_height="196dp"
+            android:layout_marginTop="24dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_intro_up_to_date" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="48dp"
+            android:gravity="top|center_horizontal"
+            android:minHeight="80dp"
+            android:paddingLeft="24dp"
+            android:paddingRight="24dp"
+            android:text="Stay up to date"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="320dp"
+            android:layout_height="wrap_content"
+            android:gravity="top|center_horizontal"
+            android:minHeight="128dp"
+            android:paddingLeft="24dp"
+            android:paddingTop="12dp"
+            android:paddingRight="24dp"
+            android:paddingBottom="12dp"
+            android:text="Check the Safe’s balances and past transactions conveniently from your mobile device. Get notified about new pending transactions."
+            android:textSize="16sp" />
+    </LinearLayout>
+</ScrollView>
+
