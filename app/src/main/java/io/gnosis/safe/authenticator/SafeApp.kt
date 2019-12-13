@@ -169,7 +169,7 @@ class SafeApp : Application() {
     @ExperimentalCoroutinesApi
     private val viewModelModule = module {
         viewModel<SplashContract> { SplashViewModel(get(), get()) }
-        viewModel<ConnectSafeContract> { ConnectSafeViewModel(get()) }
+        viewModel<ConnectSafeContract> { ConnectSafeViewModel(get(), get()) }
         viewModel<AssetsContract> { AssetsViewModel(get(), get()) }
         viewModel<TransactionsContract> { TransactionsViewModel(get()) }
         viewModel<SettingsContract> { SettingsViewModel(get()) }

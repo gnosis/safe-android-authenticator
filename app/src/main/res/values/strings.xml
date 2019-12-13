@@ -3,4 +3,14 @@
     <string name="assets">Assets</string>
     <string name="transactions">Transactions</string>
     <string name="get_started">Get Started</string>
+    <string name="connect_title">Connect to a Safe</string>
+    <string name="connect_description">Copy-paste the Safe address or click on “Receive” in the web interface to scan the code with your phone</string>
+    <string name="safe_address_hint">Safe address (0x...)</string>
+    <string name="confirm_action">Confirm</string>
+    <string name="invalid_ethereum_address">Invalid Ethereum address</string>
+    <string name="unknown_safe_address">Unknown Safe address</string>
+    <string name="unknown_server_error">Unknown server error</string>
+    <string name="error_check_internet_connection">Please make sure to have an internet connection.</string>
+    <string name="error_ssl_handshake">Please check whether the time is correctly set.</string>
+    <string name="check_address_action">Check address</string>
 </resources>
