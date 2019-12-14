@@ -1,8 +1,10 @@
 package io.gnosis.safe.authenticator.repositories
 
 import android.content.Context
-import io.gnosis.safe.authenticator.*
+import io.gnosis.safe.authenticator.AllowanceModule
 import io.gnosis.safe.authenticator.BuildConfig
+import io.gnosis.safe.authenticator.ERC20Token
+import io.gnosis.safe.authenticator.GnosisSafe
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.data.InstantTransferServiceApi
 import io.gnosis.safe.authenticator.data.JsonRpcApi
@@ -37,8 +39,16 @@ interface SafeRepository {
     suspend fun loadDeviceId(): Solidity.Address
     suspend fun setSafeAddress(safe: Solidity.Address)
     suspend fun loadSafeAddress(): Solidity.Address
+    suspend fun loadSafeTransactionExecutionInformation(
+        safe: Solidity.Address,
+        transaction: SafeTx,
+        overrideNonce: BigInteger? = null
+    ): SafeTxExecInfo
+
     suspend fun confirmSafeTransaction(
-        safe: Solidity.Address, transaction: SafeTx, execInfo: SafeTxExecInfo
+        safe: Solidity.Address,
+        transaction: SafeTx,
+        execInfo: SafeTxExecInfo
     )
 
     suspend fun loadPendingTransactions(safe: Solidity.Address): List<ServiceSafeTx>
@@ -504,6 +514,46 @@ class SafeRepositoryImpl(
             executed = isExecuted
         )
 
+    override suspend fun loadSafeTransactionExecutionInformation(
+        safe: Solidity.Address,
+        transaction: SafeRepository.SafeTx,
+        overrideNonce: BigInteger?
+    ): SafeRepository.SafeTxExecInfo {
+        val txGas = estimateTx(safe, transaction)
+        val nonce = overrideNonce ?: loadSafeNonce(safe)
+        return SafeRepository.SafeTxExecInfo(
+            BigInteger.ZERO,
+            txGas,
+            BigInteger.ZERO,
+            Solidity.Address(BigInteger.ZERO),
+            Solidity.Address(BigInteger.ZERO),
+            nonce
+        )
+    }
+
+
+    private suspend fun estimateTx(safe: Solidity.Address, transaction: SafeRepository.SafeTx): BigInteger {
+        val response = jsonRpcApi.post(
+            JsonRpcApi.JsonRpcRequest(
+                method = "eth_call",
+                params = listOf(
+                    mapOf(
+                        "from" to safe,
+                        "to" to safe,
+                        "data" to GnosisSafe.RequiredTxGas.encode(
+                            transaction.to,
+                            Solidity.UInt256(transaction.value),
+                            Solidity.Bytes(transaction.data.hexStringToByteArray()),
+                            Solidity.UInt8(transaction.operation.id.toBigInteger())
+                        )
+                    ), "latest"
+                )
+            )
+        ).result!!
+        if (response == "0x" || !response.startsWith(ESTIMATE_RESPONSE_PREFIX)) throw IllegalStateException("Could not estimate transaction!")
+        return response.removePrefix(ESTIMATE_RESPONSE_PREFIX).hexAsBigInteger() + BigInteger.valueOf(10000)
+    }
+
     override suspend fun confirmSafeTransaction(
         safe: Solidity.Address,
         transaction: SafeRepository.SafeTx,
@@ -635,6 +685,8 @@ class SafeRepositoryImpl(
 
         private const val PREF_KEY_APP_MNEMONIC = "accounts.string.app_menmonic"
         private const val PREF_KEY_SAFE_ADDRESS = "accounts.string.safe_address"
+
+        private const val ESTIMATE_RESPONSE_PREFIX = "0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000020"
 
         private const val ENC_PASSWORD = "ThisShouldNotBeHardcoded"
     }

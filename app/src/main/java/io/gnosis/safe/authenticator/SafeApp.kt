@@ -31,6 +31,7 @@ import io.gnosis.safe.authenticator.ui.splash.SplashViewModel
 import io.gnosis.safe.authenticator.ui.transactions.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.android.ext.android.getKoin
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -49,6 +50,7 @@ import pm.gnosis.svalinn.security.impls.AndroidFingerprintHelper
 import pm.gnosis.svalinn.security.impls.AndroidKeyStorage
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
 @ExperimentalCoroutinesApi
@@ -77,6 +79,9 @@ class SafeApp : Application() {
                 .connectTimeout(20, TimeUnit.SECONDS)
                 .readTimeout(20, TimeUnit.SECONDS)
                 .writeTimeout(20, TimeUnit.SECONDS)
+                .addInterceptor(HttpLoggingInterceptor(object: HttpLoggingInterceptor.Logger {
+                    override fun log(message: String) { Timber.i(message) }
+                }).apply { level = HttpLoggingInterceptor.Level.BODY })
                 .build()
         }
 
