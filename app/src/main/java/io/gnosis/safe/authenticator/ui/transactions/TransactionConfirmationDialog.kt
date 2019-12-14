@@ -1,5 +1,6 @@
 package io.gnosis.safe.authenticator.ui.transactions
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
@@ -112,17 +113,7 @@ class TransactionConfirmationViewModel(
         if (currentState().loading) return
         loadingLaunch {
             updateState { copy(loading = true) }
-            val execInfo = executionInfo ?: run {
-                val safeInfo = safeRepository.loadSafeInfo(safe)
-                SafeRepository.SafeTxExecInfo(
-                    BigInteger.ZERO,
-                    BigInteger.ZERO,
-                    BigInteger.ZERO,
-                    Solidity.Address(BigInteger.ZERO),
-                    Solidity.Address(BigInteger.ZERO),
-                    safeInfo.currentNonce
-                )
-            }
+            val execInfo = executionInfo ?: safeRepository.loadSafeTransactionExecutionInformation(safe, transaction)
             safeRepository.confirmSafeTransaction(safe, transaction, execInfo)
             updateState { copy(loading = false, confirmed = true) }
         }
@@ -150,6 +141,7 @@ class TransactionConfirmationDialog(
         override fun onSlide(bottomSheet: View, slideOffset: Float) {}
 
         override fun onStateChanged(bottomSheet: View, newState: Int) {
+            @SuppressLint("SwitchIntDef")
             when(newState) {
                 STATE_EXPANDED -> confirm_tx_title.text = "Pull down to close"
                 STATE_COLLAPSED -> confirm_tx_title.text = "Pull up for details"

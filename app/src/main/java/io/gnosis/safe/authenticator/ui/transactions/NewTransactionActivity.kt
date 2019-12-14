@@ -61,9 +61,7 @@ class NewTransactionViewModel(
             val tx = SafeRepository.SafeTx(
                 toAddress, weiValue, dataBytes.toHexString().addHexPrefix(), SafeRepository.SafeTx.Operation.CALL
             )
-            val execInfo = SafeRepository.SafeTxExecInfo(
-                BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO, "0x0".asEthereumAddress()!!, "0x0".asEthereumAddress()!!, nonceValue
-            )
+            val execInfo = safeRepository.loadSafeTransactionExecutionInformation(safe, tx, nonceValue)
             safeRepository.confirmSafeTransaction(safe, tx, execInfo)
             updateState { copy(loading = false, done = true) }
         }
