@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.lifecycle.liveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
@@ -25,7 +26,7 @@ abstract class InstantTransferListContract : LoadingViewModel<InstantTransferLis
 
     data class State(
         val loading: Boolean,
-        val transactions: List<ListEntry>,
+        val transactions: List<ListEntry>?,
         override var viewAction: ViewAction?
     ) : BaseViewModel.State
 }
@@ -59,7 +60,7 @@ class InstantTransferListViewModel(
 
     override fun onLoadingError(state: State, e: Throwable) = state.copy(loading = false)
 
-    override fun initialState() = State(false, emptyList(), null)
+    override fun initialState() = State(false, null, null)
 
 }
 
@@ -88,6 +89,7 @@ class InstantTransferListScreen : BaseFragment<InstantTransferListContract.State
     override fun updateState(state: InstantTransferListContract.State) {
         instant_transfers_refresh.isRefreshing = state.loading
         adapter.submitList(state.transactions)
+        instant_transfers_empty_views.isVisible = state.transactions?.isEmpty() == true
     }
 
     inner class TransactionAdapter : ListAdapter<ListEntry, ListEntryViewHolder>(DiffCallback()) {

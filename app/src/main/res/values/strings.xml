@@ -13,4 +13,14 @@
     <string name="error_check_internet_connection">Please make sure to have an internet connection.</string>
     <string name="error_ssl_handshake">Please check whether the time is correctly set.</string>
     <string name="check_address_action">Check address</string>
+    <string name="no_allowances_title">No allowances set</string>
+    <string name="no_allowances_message">To enable instant transfers for this device, go to https://gnosis-safe.io and set an allowance.</string>
+    <string name="no_balances_title">No token balances</string>
+    <string name="no_balances_message">When you send tokens to your Safe they will appear here.</string>
+    <string name="no_transactions_title">No Safe transactions yet</string>
+    <string name="no_transactions_message">New transactions will show up here.</string>
+    <string name="no_instant_transfers_title">No Instant Transfers yet</string>
+    <string name="no_instant_transfers_message">New Instant Transfers will show up here.</string>
+    <string name="device_id">Device ID</string>
+    <string name="copy_to_clipboard">Copy to clipboard</string>
 </resources>
