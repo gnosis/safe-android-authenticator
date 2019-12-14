@@ -4,15 +4,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.lifecycle.liveData
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import com.squareup.picasso.Picasso
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.ui.adapter.*
-import io.gnosis.safe.authenticator.ui.adapter.ListEntry.Header
 import io.gnosis.safe.authenticator.ui.adapter.ListEntry.TransactionMeta
 import io.gnosis.safe.authenticator.ui.base.BaseFragment
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
@@ -31,7 +30,7 @@ abstract class TransactionsContract : LoadingViewModel<TransactionsContract.Stat
     data class State(
         val loading: Boolean,
         val safe: Solidity.Address?,
-        val transactions: List<ListEntry>,
+        val transactions: List<ListEntry>?,
         override var viewAction: ViewAction?
     ) : BaseViewModel.State
 }
@@ -80,7 +79,7 @@ class TransactionsViewModel(
 
     override fun onLoadingError(state: State, e: Throwable) = state.copy(loading = false)
 
-    override fun initialState() = State(false, null, emptyList(), null)
+    override fun initialState() = State(false, null, null, null)
 
 }
 
@@ -110,6 +109,7 @@ class TransactionsScreen : BaseFragment<TransactionsContract.State, Transactions
         transactions_refresh.isRefreshing = state.loading
         adapter.safe = state.safe
         adapter.submitList(state.transactions)
+        transactions_empty_views.isVisible = state.transactions?.isEmpty() == true
     }
 
     override fun onConfirmed() {

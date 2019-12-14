@@ -1,9 +1,12 @@
 package io.gnosis.safe.authenticator.ui.assets
 
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.lifecycle.liveData
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,10 +20,7 @@ import io.gnosis.safe.authenticator.ui.base.BaseFragment
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
 import io.gnosis.safe.authenticator.ui.instant.NewInstantTransferActivity
-import io.gnosis.safe.authenticator.utils.asMiddleEllipsized
-import io.gnosis.safe.authenticator.utils.nullOnThrow
-import io.gnosis.safe.authenticator.utils.setTransactionIcon
-import io.gnosis.safe.authenticator.utils.shiftedString
+import io.gnosis.safe.authenticator.utils.*
 import kotlinx.android.synthetic.main.item_token_balance.view.*
 import kotlinx.android.synthetic.main.screen_assets.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -38,7 +38,9 @@ abstract class AssetsContract : LoadingViewModel<AssetsContract.State>() {
     data class State(
         val loading: Boolean,
         val safe: Solidity.Address?,
-        val assets: List<TokenBalance>,
+        val qrCode: Bitmap?,
+        val deviceIdString: String?,
+        val assets: List<TokenBalance>?,
         override var viewAction: ViewAction?
     ) : BaseViewModel.State
 
@@ -87,13 +89,18 @@ class AssetsViewModel(
                 val info = nullOnThrow { tokensRepository.loadTokenInfo(address) }
                 TokenBalance(address, balance, info)
             }
-            updateState { copy(loading = false, safe = safe, assets = balancesWithTokenInfo) }
+            val deviceIdString = safeRepository.loadDeviceId().asEthereumAddressChecksumString()
+            val qrCode =
+                if (balancesWithTokenInfo.isEmpty())
+                    deviceIdString.generateQrCode(512, 512)
+                else null
+            updateState { copy(loading = false, safe = safe, assets = balancesWithTokenInfo, qrCode = qrCode, deviceIdString = deviceIdString) }
         }
     }
 
     override fun onLoadingError(state: State, e: Throwable) = state.copy(loading = false)
 
-    override fun initialState() = State(false, null, emptyList(), null)
+    override fun initialState() = State(false, null, null, null, null, null)
 
 }
 
@@ -116,15 +123,31 @@ class AssetsScreen : BaseFragment<AssetsContract.State, AssetsContract>() {
         layoutManager = LinearLayoutManager(context)
         assets_list.adapter = adapter
         assets_list.layoutManager = layoutManager
-        //transactions_back_btn.setOnClickListener { onBackPressed() }
         assets_refresh.setOnRefreshListener {
             viewModel.loadAssets()
         }
+        assets_empty_title.text = getString(if (showOnlyAllowance) R.string.no_allowances_title else R.string.no_balances_title)
+        assets_empty_message.text = getString(if (showOnlyAllowance) R.string.no_allowances_message else R.string.no_balances_message)
     }
 
     override fun updateState(state: AssetsContract.State) {
         assets_refresh.isRefreshing = state.loading
         adapter.submitList(state.assets)
+        assets_list.isVisible = !state.assets.isNullOrEmpty()
+        assets_empty_views.isVisible = state.assets?.isEmpty() == true
+        assets_qr_views.isVisible = state.qrCode != null
+        assets_device_qr.setImageBitmap(state.qrCode)
+        if (state.deviceIdString != null) {
+            assets_copy_btn.setOnClickListener {
+                context?.apply {
+                    copyToClipboard("Device Id", state.deviceIdString) {
+                        Toast.makeText(this, "Copied device id to clipboard!", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        } else {
+            assets_copy_btn.setOnClickListener(null)
+        }
     }
 
     inner class BalancesAdapter : ListAdapter<AssetsContract.TokenBalance, ViewHolder>(DiffCallback()) {
