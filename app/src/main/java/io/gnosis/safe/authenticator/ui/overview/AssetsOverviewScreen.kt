@@ -1,24 +1,29 @@
 package io.gnosis.safe.authenticator.ui.overview
 
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
+import androidx.viewpager.widget.ViewPager
+import androidx.viewpager2.widget.ViewPager2
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.ui.assets.AssetsScreen
-import io.gnosis.safe.authenticator.ui.instant.InstantTransferListScreen
 import io.gnosis.safe.authenticator.ui.settings.SettingsActivity
-import io.gnosis.safe.authenticator.ui.transactions.TransactionsScreen
 import kotlinx.android.synthetic.main.screen_overview.*
 
 
 class AssetsOverviewScreen : Fragment() {
+
+    private var callback: OverviewTypeSwitchCallback? = null
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        callback = context as? OverviewTypeSwitchCallback
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
         inflater.inflate(R.layout.screen_overview, container, false)
@@ -27,8 +32,14 @@ class AssetsOverviewScreen : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         overview_title.text = getString(R.string.assets)
         overview_pager.adapter = AssetsOverviewAdapter(childFragmentManager)
+        overview_pager.addOnPageChangeListener(object : ViewPager.SimpleOnPageChangeListener() {
+            override fun onPageSelected(position: Int) {
+                callback?.onSwitchType(OverviewTypeSwitchCallback.parseType(position))
+            }
+        })
         overview_pager_indicator.setViewPager(overview_pager)
         overview_pager.offscreenPageLimit = 4
+        overview_pager.currentItem = callback?.getCurrentType()?.id ?: 0
         overview_settings_btn.setOnClickListener {
             startActivity(SettingsActivity.createIntent(context!!))
         }

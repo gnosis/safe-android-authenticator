@@ -13,6 +13,8 @@ import io.gnosis.safe.authenticator.repositories.TokensRepository
 import io.gnosis.safe.authenticator.ui.base.BaseActivity
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
+import io.gnosis.safe.authenticator.ui.overview.MainActivity
+import io.gnosis.safe.authenticator.ui.overview.OverviewTypeSwitchCallback
 import io.gnosis.safe.authenticator.ui.qr.QRCodeScanActivity
 import io.gnosis.safe.authenticator.utils.shiftedString
 import io.gnosis.safe.authenticator.utils.useAsAddress
@@ -148,7 +150,7 @@ class NewInstantTransferActivity : BaseActivity<NewInstantTransferContract.State
 
     override fun updateState(state: NewInstantTransferContract.State) {
         if (state.done) {
-            finish()
+            startActivity(MainActivity.createIntent(this, R.id.navigation_transactions, OverviewTypeSwitchCallback.Type.ALLOWANCE))
             return
         }
         instant_transfer_submit_btn.isEnabled = !state.loading
