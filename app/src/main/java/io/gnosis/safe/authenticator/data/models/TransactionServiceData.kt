@@ -30,7 +30,8 @@ data class ServiceTransaction(
     @Json(name = "submissionDate") val submissionDate: String,
     @Json(name = "executionDate") val executionDate: String?,
     @Json(name = "confirmations") val confirmations: List<ServiceConfirmation>,
-    @Json(name = "isExecuted") val isExecuted: Boolean
+    @Json(name = "isExecuted") val isExecuted: Boolean,
+    @Json(name = "transactionHash") val transactionHash: String?
 )
 
 @JsonClass(generateAdapter = true)

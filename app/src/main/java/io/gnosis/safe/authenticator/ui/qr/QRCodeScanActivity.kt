@@ -73,8 +73,7 @@ class QRCodeScanActivity : AppCompatActivity() {
         }
 
         fun handleResult(
-            requestCode: Int, resultCode: Int, data: Intent?,
-            onQrCodeResult: (String) -> Unit, onCancelledResult: (() -> Unit)? = null
+            requestCode: Int, resultCode: Int, data: Intent?, onCancelledResult: (() -> Unit)? = null, onQrCodeResult: (String) -> Unit
         ): Boolean {
             if (requestCode == REQUEST_CODE) {
                 if (resultCode == Activity.RESULT_OK && data != null && data.hasExtra(RESULT_EXTRA)) {

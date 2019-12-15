@@ -170,9 +170,11 @@ class ManageAllowancesActivity : BaseActivity<ManageAllowancesContract.State, Ma
         }
     }
 
-    override fun onConfirmed() {
+    override fun onConfirmed(hash: String) {
         viewModel.loadAllowances()
     }
+
+    override fun onRejected() {}
 
     class DiffCallback : DiffUtil.ItemCallback<ManageAllowancesContract.WrappedAllowance>() {
         override fun areItemsTheSame(oldItem: ManageAllowancesContract.WrappedAllowance, newItem: ManageAllowancesContract.WrappedAllowance) =

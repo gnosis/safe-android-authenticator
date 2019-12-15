@@ -8,13 +8,15 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 @ExperimentalCoroutinesApi
-abstract class LoadingViewModel<T: BaseViewModel.State>: BaseViewModel<T>() {
+abstract class LoadingViewModel<T : BaseViewModel.State> : BaseViewModel<T>() {
 
     private val loadingErrorHandler = CoroutineExceptionHandler { _, e ->
         Timber.e(e)
-        viewModelScope.launch { updateState(true) {
-            onLoadingError(this, e).apply {
-                viewAction = ShowToast(e.message ?: "An error occurred"); this }
+        viewModelScope.launch {
+            updateState(true) {
+                onLoadingError(this, e).apply {
+                    viewAction = ShowToast(e.message ?: "An error occurred");
+                }
             }
         }
     }

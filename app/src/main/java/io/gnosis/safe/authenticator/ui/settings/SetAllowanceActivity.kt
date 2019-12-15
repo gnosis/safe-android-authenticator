@@ -13,7 +13,6 @@ import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
 import io.gnosis.safe.authenticator.ui.qr.QRCodeScanActivity
 import io.gnosis.safe.authenticator.ui.transactions.TransactionConfirmationDialog
 import io.gnosis.safe.authenticator.utils.MultiSendTransactionBuilder
-import io.gnosis.safe.authenticator.utils.nullOnThrow
 import io.gnosis.safe.authenticator.utils.useAsAddress
 import kotlinx.android.synthetic.main.screen_set_allowance.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -101,9 +100,9 @@ class SetAllowanceActivity : BaseActivity<SetAllowanceContract.State, SetAllowan
     override val viewModel: SetAllowanceContract by viewModel()
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (!QRCodeScanActivity.handleResult(requestCode, resultCode, data, { scanned ->
+        if (!QRCodeScanActivity.handleResult(requestCode, resultCode, data) { scanned ->
                 set_allowance_delegate_input.useAsAddress(scanned)
-            }))
+            })
             super.onActivityResult(requestCode, resultCode, data)
     }
 
@@ -136,9 +135,11 @@ class SetAllowanceActivity : BaseActivity<SetAllowanceContract.State, SetAllowan
         }
     }
 
-    override fun onConfirmed() {
+    override fun onConfirmed(hash: String) {
         finish()
     }
+
+    override fun onRejected() {}
 
     companion object {
         fun createIntent(context: Context) = Intent(context, SetAllowanceActivity::class.java)

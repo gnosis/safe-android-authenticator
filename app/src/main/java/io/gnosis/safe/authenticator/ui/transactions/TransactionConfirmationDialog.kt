@@ -28,6 +28,7 @@ import org.koin.androidx.viewmodel.getViewModel
 import org.koin.core.parameter.parametersOf
 import pm.gnosis.model.Solidity
 import pm.gnosis.svalinn.common.utils.getColorCompat
+import pm.gnosis.utils.addHexPrefix
 import java.lang.ref.WeakReference
 import java.math.BigInteger
 
@@ -37,7 +38,7 @@ abstract class TransactionConfirmationContract : LoadingViewModel<TransactionCon
     data class State(
         val loading: Boolean,
         val fees: BigInteger?,
-        val confirmed: Boolean,
+        val signedHash: String?,
         val txInfo: SafeRepository.TransactionInfo?,
         val txState: TransactionState?,
         override var viewAction: ViewAction?
@@ -114,14 +115,14 @@ class TransactionConfirmationViewModel(
         loadingLaunch {
             updateState { copy(loading = true) }
             val execInfo = executionInfo ?: safeRepository.loadSafeTransactionExecutionInformation(safe, transaction)
-            safeRepository.confirmSafeTransaction(safe, transaction, execInfo)
-            updateState { copy(loading = false, confirmed = true) }
+            val hash = safeRepository.confirmSafeTransaction(safe, transaction, execInfo).addHexPrefix()
+            updateState { copy(loading = false, signedHash = hash) }
         }
     }
 
     override fun onLoadingError(state: State, e: Throwable) = state.copy(loading = false)
 
-    override fun initialState() = State(false, null, false, null, null, null)
+    override fun initialState() = State(false, null, null, null, null, null)
 
 }
 
@@ -135,14 +136,15 @@ class TransactionConfirmationDialog(
     callback: Callback? = null
 ) : BottomSheetDialog(activity), LifecycleOwner, ViewModelStoreOwner {
 
+    private val rejectOnDismiss = executionInfo == null
     private val callback: WeakReference<Callback>? = (callback ?: (activity as? Callback))?.let { WeakReference(it) }
 
-    private val bottomSheetCallback = object: BottomSheetBehavior.BottomSheetCallback() {
+    private val bottomSheetCallback = object : BottomSheetBehavior.BottomSheetCallback() {
         override fun onSlide(bottomSheet: View, slideOffset: Float) {}
 
         override fun onStateChanged(bottomSheet: View, newState: Int) {
             @SuppressLint("SwitchIntDef")
-            when(newState) {
+            when (newState) {
                 STATE_EXPANDED -> confirm_tx_title.text = "Pull down to close"
                 STATE_COLLAPSED -> confirm_tx_title.text = "Pull up for details"
             }
@@ -172,8 +174,9 @@ class TransactionConfirmationDialog(
         }
         viewModel.state.observe(this, Observer {
             confirm_tx_submit_btn.isEnabled = !it.loading
-            if (it.confirmed) {
-                callback?.get()?.onConfirmed()
+            if (it.signedHash != null) {
+                callback?.get()?.onConfirmed(it.signedHash)
+                callback?.clear()
                 dismiss()
             }
             confirm_tx_fee_value.text = it.fees?.shiftedString(18)
@@ -182,7 +185,7 @@ class TransactionConfirmationDialog(
             confirm_tx_target_icon.setAddress(it.txInfo?.recipient)
             confirm_tx_description.text = it.txInfo?.additionalInfo
             when (it.txState?.submissionState) {
-                TransactionConfirmationContract.SubmissionState.AWAITING_CONFIRMATION ->{
+                TransactionConfirmationContract.SubmissionState.AWAITING_CONFIRMATION -> {
                     confirm_tx_submit_btn.isVisible = true
                     confirm_tx_status.isVisible = false
                 }
@@ -198,6 +201,7 @@ class TransactionConfirmationDialog(
         })
         lifecycle.currentState = Lifecycle.State.CREATED
         setOnDismissListener {
+            if (rejectOnDismiss) callback?.get()?.onRejected()
             lifecycle.currentState = Lifecycle.State.DESTROYED
         }
     }
@@ -222,7 +226,8 @@ class TransactionConfirmationDialog(
     }
 
     interface Callback {
-        fun onConfirmed()
+        fun onConfirmed(hash: String)
+        fun onRejected()
     }
 
 }
