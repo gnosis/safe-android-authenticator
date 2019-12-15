@@ -92,7 +92,7 @@ class WalletConnectRepositoryImpl(
     override fun currentSession(): WalletConnectRepository.DappSession? =
         sessionStore.list().firstOrNull()?.let {
             val meta = it.peerData?.meta
-            WalletConnectRepository.DappSession(meta?.name, meta?.url, meta?.icons?.firstOrNull(), session != null)
+            WalletConnectRepository.DappSession(meta?.url, meta?.name, meta?.icons?.firstOrNull(), session != null)
         }
 
     override fun createSession(uri: String) {

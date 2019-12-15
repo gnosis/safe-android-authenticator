@@ -161,7 +161,7 @@ class WalletConnectStatusActivity : BaseActivity<WalletConnectStatusContract.Sta
         } else {
             wallet_connect_status_dapp_url.setOnClickListener(null)
         }
-        if (state.dappIcon.isNullOrEmpty()) {
+        if (!state.dappIcon.isNullOrBlank()) {
             picasso.load(state.dappIcon).placeholder(R.drawable.circle_background).into(wallet_connect_status_dapp_icon)
         } else {
             wallet_connect_status_dapp_icon.setImageResource(R.drawable.circle_background)

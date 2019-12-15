@@ -13,7 +13,6 @@ fun ImageView.setTransactionIcon(picasso: Picasso, icon: String?) {
     colorFilter = null
     when {
         icon == "local::ethereum" -> {
-            setPadding(context.resources.getDimension(R.dimen.icon_padding).toInt())
             setImageResource(R.drawable.ic_ethereum_logo)
         }
         icon == "local::settings" -> {
