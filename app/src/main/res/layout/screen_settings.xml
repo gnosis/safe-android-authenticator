@@ -155,4 +155,26 @@
         android:textSize="24sp"
         android:text="Create custom TX"
         app:layout_constraintTop_toBottomOf="@id/settings_custom_tx_divider" />
+
+    <View
+        android:id="@+id/settings_wallet_connect_divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:background="@color/divider"
+        app:layout_constraintTop_toBottomOf="@id/settings_custom_tx_txt" />
+
+    <TextView
+        android:id="@+id/settings_wallet_connect_txt"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@drawable/selectable_background"
+        android:gravity="center"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:textColor="@color/darkText"
+        android:textSize="24sp"
+        android:text="Wallet Connect"
+        app:layout_constraintTop_toBottomOf="@id/settings_wallet_connect_divider" />
 </androidx.constraintlayout.widget.ConstraintLayout>

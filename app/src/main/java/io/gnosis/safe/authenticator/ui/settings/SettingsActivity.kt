@@ -11,6 +11,7 @@ import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.ui.base.BaseActivity
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.transactions.NewTransactionActivity
+import io.gnosis.safe.authenticator.ui.walletconnect.WalletConnectStatusActivity
 import io.gnosis.safe.authenticator.utils.asMiddleEllipsized
 import io.gnosis.safe.authenticator.utils.copyToClipboard
 import kotlinx.android.synthetic.main.screen_settings.*
@@ -89,6 +90,7 @@ class SettingsActivity : BaseActivity<SettingsContract.State, SettingsContract>(
         settings_back_btn.setOnClickListener { onBackPressed() }
         settings_custom_tx_txt.setOnClickListener { startActivity(NewTransactionActivity.createIntent(this)) }
         settings_manage_allowance_module_txt.setOnClickListener { startActivity(ManageAllowancesActivity.createIntent(this)) }
+        settings_wallet_connect_txt.setOnClickListener { startActivity(WalletConnectStatusActivity.createIntent(this)) }
     }
 
     companion object {

@@ -1,10 +1,8 @@
 package io.gnosis.safe.authenticator.repositories
 
 import android.content.Context
-import io.gnosis.safe.authenticator.AllowanceModule
+import io.gnosis.safe.authenticator.*
 import io.gnosis.safe.authenticator.BuildConfig
-import io.gnosis.safe.authenticator.ERC20Token
-import io.gnosis.safe.authenticator.GnosisSafe
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.data.InstantTransferServiceApi
 import io.gnosis.safe.authenticator.data.JsonRpcApi
@@ -49,7 +47,7 @@ interface SafeRepository {
         safe: Solidity.Address,
         transaction: SafeTx,
         execInfo: SafeTxExecInfo
-    )
+    ): String
 
     suspend fun loadPendingTransactions(safe: Solidity.Address): List<ServiceSafeTx>
 
@@ -66,7 +64,8 @@ interface SafeRepository {
         val tx: SafeTx,
         val execInfo: SafeTxExecInfo,
         val confirmations: List<Pair<Solidity.Address, String?>>,
-        val executed: Boolean
+        val executed: Boolean,
+        val txHash: String?
     )
 
     data class SafeTx(
@@ -434,61 +433,64 @@ class SafeRepositoryImpl(
         transactionServiceApi.loadTransaction(txHash).toLocal()
 
     override suspend fun loadTransactionInformation(safe: Solidity.Address, transaction: SafeRepository.SafeTx) =
-        when {
-            transaction.to == safe && transaction.data.removeHexPrefix().isBlank() && transaction.value == BigInteger.ZERO -> {// Safe management
-                SafeRepository.TransactionInfo(
-                    recipient = transaction.to,
-                    recipientLabel = transaction.to.asEthereumAddressChecksumString().asMiddleEllipsized(4),
-                    assetIcon = "local::settings",
-                    assetLabel = "Cancel transaction"
-                )
-            }
-            transaction.to == safe && transaction.value == BigInteger.ZERO -> {// Safe management
-                SafeRepository.TransactionInfo(
-                    recipient = transaction.to,
-                    recipientLabel = transaction.to.asEthereumAddressChecksumString().asMiddleEllipsized(4),
-                    assetIcon = "local::settings",
-                    assetLabel = "Safe management"
-                )
-            }
-            transaction.data.isSolidityMethod(ERC20Token.Transfer.METHOD_ID) -> { // Token transfer
-                val transferArgs = ERC20Token.Transfer.decodeArguments(transaction.data.removeSolidityMethodPrefix(ERC20Token.Transfer.METHOD_ID))
-                val tokenInfo = nullOnThrow { tokensRepository.loadTokenInfo(transaction.to) }
-                val symbol = tokenInfo?.symbol ?: transaction.to.asEthereumAddressChecksumString().asMiddleEllipsized(4)
-                SafeRepository.TransactionInfo(
-                    recipient = transferArgs._to,
-                    recipientLabel = transferArgs._to.asEthereumAddressChecksumString().asMiddleEllipsized(4),
-                    assetIcon = tokenInfo?.icon,
-                    assetLabel = "${transferArgs._value.value.shiftedString(tokenInfo?.decimals ?: 0)} $symbol",
-                    additionalInfo = "Token transfer"
-                )
-            }
-            transaction.data.isSolidityMethod(ERC20Token.Approve.METHOD_ID) -> { // Token transfer
-                val approveArgs = ERC20Token.Approve.decodeArguments(transaction.data.removeSolidityMethodPrefix(ERC20Token.Transfer.METHOD_ID))
-                val tokenInfo = nullOnThrow { tokensRepository.loadTokenInfo(transaction.to) }
-                val symbol = tokenInfo?.symbol ?: transaction.to.asEthereumAddressChecksumString().asMiddleEllipsized(4)
-                SafeRepository.TransactionInfo(
-                    recipient = approveArgs._spender,
-                    recipientLabel = approveArgs._spender.asEthereumAddressChecksumString().asMiddleEllipsized(4),
-                    assetIcon = tokenInfo?.icon,
-                    assetLabel = "Approve ${approveArgs._value.value.shiftedString(tokenInfo?.decimals ?: 0)} $symbol",
-                    additionalInfo = "Token approval"
-                )
-            }
-            else -> { // ETH transfer
-                var assetLabel = "${transaction.value.shiftedString(18)} ETH"
-                val hasData = transaction.data.removeHexPrefix().isNotBlank()
-                if (hasData) {
-                    assetLabel += " / ${transaction.data.length / 2 - 1} bytes"
+        nullOnThrow {
+            when {
+                transaction.to == safe && transaction.data.removeHexPrefix().isBlank() && transaction.value == BigInteger.ZERO -> {// Safe management
+                    SafeRepository.TransactionInfo(
+                        recipient = transaction.to,
+                        recipientLabel = transaction.to.asEthereumAddressChecksumString().asMiddleEllipsized(4),
+                        assetIcon = "local::settings",
+                        assetLabel = "Cancel transaction"
+                    )
                 }
-                SafeRepository.TransactionInfo(
-                    recipient = transaction.to,
-                    recipientLabel = transaction.to.asEthereumAddressChecksumString().asMiddleEllipsized(4),
-                    assetIcon = "local::ethereum",
-                    assetLabel = assetLabel,
-                    additionalInfo = if (hasData) "Contract interaction: ${transaction.data.addHexPrefix()}" else null
-                )
+                transaction.to == safe && transaction.value == BigInteger.ZERO -> {// Safe management
+                    SafeRepository.TransactionInfo(
+                        recipient = transaction.to,
+                        recipientLabel = transaction.to.asEthereumAddressChecksumString().asMiddleEllipsized(4),
+                        assetIcon = "local::settings",
+                        assetLabel = "Safe management"
+                    )
+                }
+                transaction.data.isSolidityMethod(ERC20Token.Transfer.METHOD_ID) -> { // Token transfer
+                    val transferArgs = ERC20Token.Transfer.decodeArguments(transaction.data.removeSolidityMethodPrefix(ERC20Token.Transfer.METHOD_ID))
+                    val tokenInfo = nullOnThrow { tokensRepository.loadTokenInfo(transaction.to) }
+                    val symbol = tokenInfo?.symbol ?: transaction.to.asEthereumAddressChecksumString().asMiddleEllipsized(4)
+                    SafeRepository.TransactionInfo(
+                        recipient = transferArgs._to,
+                        recipientLabel = transferArgs._to.asEthereumAddressChecksumString().asMiddleEllipsized(4),
+                        assetIcon = tokenInfo?.icon,
+                        assetLabel = "${transferArgs._value.value.shiftedString(tokenInfo?.decimals ?: 0)} $symbol",
+                        additionalInfo = "Token transfer"
+                    )
+                }
+                transaction.data.isSolidityMethod(ERC20Token.Approve.METHOD_ID) -> { // Token transfer
+                    val approveArgs = ERC20Token.Approve.decodeArguments(transaction.data.removeSolidityMethodPrefix(ERC20Token.Approve.METHOD_ID))
+                    val tokenInfo = nullOnThrow { tokensRepository.loadTokenInfo(transaction.to) }
+                    val symbol = tokenInfo?.symbol ?: transaction.to.asEthereumAddressChecksumString().asMiddleEllipsized(4)
+                    SafeRepository.TransactionInfo(
+                        recipient = approveArgs._spender,
+                        recipientLabel = approveArgs._spender.asEthereumAddressChecksumString().asMiddleEllipsized(4),
+                        assetIcon = tokenInfo?.icon,
+                        assetLabel = "Approve ${approveArgs._value.value.shiftedString(tokenInfo?.decimals ?: 0)} $symbol",
+                        additionalInfo = "Token approval"
+                    )
+                }
+                else -> null
             }
+        } ?: run {
+            // ETH transfer
+            var assetLabel = "${transaction.value.shiftedString(18)} ETH"
+            val hasData = transaction.data.removeHexPrefix().isNotBlank()
+            if (hasData) {
+                assetLabel += " / ${transaction.data.length / 2 - 1} bytes"
+            }
+            SafeRepository.TransactionInfo(
+                recipient = transaction.to,
+                recipientLabel = transaction.to.asEthereumAddressChecksumString().asMiddleEllipsized(4),
+                assetIcon = "local::ethereum",
+                assetLabel = assetLabel,
+                additionalInfo = if (hasData) "Contract interaction: ${transaction.data.addHexPrefix()}" else null
+            )
         }
 
     private fun ServiceTransaction.toLocal() =
@@ -511,7 +513,8 @@ class SafeRepositoryImpl(
             confirmations = confirmations.map { confirmation ->
                 confirmation.owner.asEthereumAddress()!! to confirmation.signature
             },
-            executed = isExecuted
+            executed = isExecuted,
+            txHash = transactionHash
         )
 
     override suspend fun loadSafeTransactionExecutionInformation(
@@ -558,7 +561,7 @@ class SafeRepositoryImpl(
         safe: Solidity.Address,
         transaction: SafeRepository.SafeTx,
         execInfo: SafeRepository.SafeTxExecInfo
-    ) {
+    ): String {
         val hash =
             calculateHash(
                 safe,
@@ -594,6 +597,7 @@ class SafeRepositoryImpl(
             signature = signature.toSignatureString()
         )
         transactionServiceApi.confirmTransaction(safe.asEthereumAddressChecksumString(), confirmation)
+        return hash.toHexString()
     }
 
     private fun ECDSASignature.toSignatureString() =
@@ -686,7 +690,8 @@ class SafeRepositoryImpl(
         private const val PREF_KEY_APP_MNEMONIC = "accounts.string.app_menmonic"
         private const val PREF_KEY_SAFE_ADDRESS = "accounts.string.safe_address"
 
-        private const val ESTIMATE_RESPONSE_PREFIX = "0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000020"
+        private const val ESTIMATE_RESPONSE_PREFIX =
+            "0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000020"
 
         private const val ENC_PASSWORD = "ThisShouldNotBeHardcoded"
     }

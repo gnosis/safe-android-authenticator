@@ -47,7 +47,7 @@ ext {
             svalinn                   : 'v0.10.0',
             timber                    : '4.7.1',
             wallet_connect            : '0.9.6',
-            zxing                     : '3.3.1',
+            zxing                     : '3.3.3',
 
             // Test dependencies
             espresso                  : '3.1.1',

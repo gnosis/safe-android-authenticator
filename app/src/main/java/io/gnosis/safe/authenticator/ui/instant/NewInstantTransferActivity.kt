@@ -21,7 +21,6 @@ import io.gnosis.safe.authenticator.utils.useAsAddress
 import kotlinx.android.synthetic.main.screen_instant_transfer.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
 import pm.gnosis.model.Solidity
 import pm.gnosis.utils.asEthereumAddress
 import pm.gnosis.utils.asEthereumAddressString
@@ -111,9 +110,9 @@ class NewInstantTransferActivity : BaseActivity<NewInstantTransferContract.State
     private var selectedToken: Solidity.Address? = null
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (!QRCodeScanActivity.handleResult(requestCode, resultCode, data, { scanned ->
+        if (!QRCodeScanActivity.handleResult(requestCode, resultCode, data) { scanned ->
                 instant_transfer_recipient_input.useAsAddress(scanned)
-            }))
+            })
             super.onActivityResult(requestCode, resultCode, data)
     }
 

@@ -102,9 +102,9 @@ class ConnectSafeActivity : BaseActivity<ConnectSafeContract.State, ConnectSafeC
     override val viewModel: ConnectSafeContract by viewModel()
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (!QRCodeScanActivity.handleResult(requestCode, resultCode, data, { scanned ->
+        if (!QRCodeScanActivity.handleResult(requestCode, resultCode, data) { scanned ->
                 connect_safe_address_input.useAsAddress(scanned)
-            }))
+            })
             super.onActivityResult(requestCode, resultCode, data)
     }
 

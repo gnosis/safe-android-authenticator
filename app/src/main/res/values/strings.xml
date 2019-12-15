@@ -23,4 +23,10 @@
     <string name="no_instant_transfers_message">New Instant Transfers will show up here.</string>
     <string name="device_id">Device ID</string>
     <string name="copy_to_clipboard">Copy to clipboard</string>
+    <string name="channel_name_wallet_connect_requests">WalletConnect requests</string>
+    <string name="channel_description_wallet_connect_requests">Requests from WalletConnect sessions</string>
+    <string name="channel_name_wallet_connect_sessions">WalletConnect updates</string>
+    <string name="channel_description_wallet_connect_sessions">Updates for WalletConnect sessions</string>
+    <string name="notification_new_transaction_request">New transaction request to review</string>
+    <string name="unknown_dapp">Unknown Dapp</string>
 </resources>

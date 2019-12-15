@@ -112,9 +112,11 @@ class TransactionsScreen : BaseFragment<TransactionsContract.State, Transactions
         transactions_empty_views.isVisible = state.transactions?.isEmpty() == true
     }
 
-    override fun onConfirmed() {
+    override fun onConfirmed(hash: String) {
         viewModel.loadTransactions()
     }
+
+    override fun onRejected() {}
 
     inner class TransactionAdapter : ListAdapter<ListEntry, ListEntryViewHolder>(DiffCallback()) {
         var safe: Solidity.Address? = null

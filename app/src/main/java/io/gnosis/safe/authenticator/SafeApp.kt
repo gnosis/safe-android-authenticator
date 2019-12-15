@@ -1,6 +1,7 @@
 package io.gnosis.safe.authenticator
 
 import android.app.Application
+import android.content.Context
 import androidx.room.Room
 import com.squareup.moshi.Moshi
 import com.squareup.picasso.Picasso
@@ -11,12 +12,11 @@ import io.gnosis.safe.authenticator.data.TransactionServiceApi
 import io.gnosis.safe.authenticator.data.adapter.*
 import io.gnosis.safe.authenticator.db.InstantTransfersDatabase
 import io.gnosis.safe.authenticator.db.TokensDatabase
-import io.gnosis.safe.authenticator.repositories.GnosisServiceTokenRepository
-import io.gnosis.safe.authenticator.repositories.SafeRepository
-import io.gnosis.safe.authenticator.repositories.SafeRepositoryImpl
-import io.gnosis.safe.authenticator.repositories.TokensRepository
+import io.gnosis.safe.authenticator.repositories.*
+import io.gnosis.safe.authenticator.services.AndroidLocalNotificationManager
 import io.gnosis.safe.authenticator.services.CrashReporter
 import io.gnosis.safe.authenticator.services.FirebaseCrashReporter
+import io.gnosis.safe.authenticator.services.LocalNotificationManager
 import io.gnosis.safe.authenticator.ui.assets.AssetsContract
 import io.gnosis.safe.authenticator.ui.assets.AssetsViewModel
 import io.gnosis.safe.authenticator.ui.instant.InstantTransferListContract
@@ -29,6 +29,8 @@ import io.gnosis.safe.authenticator.ui.settings.*
 import io.gnosis.safe.authenticator.ui.splash.SplashContract
 import io.gnosis.safe.authenticator.ui.splash.SplashViewModel
 import io.gnosis.safe.authenticator.ui.transactions.*
+import io.gnosis.safe.authenticator.ui.walletconnect.WalletConnectStatusContract
+import io.gnosis.safe.authenticator.ui.walletconnect.WalletConnectStatusViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -37,6 +39,9 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
+import org.walletconnect.impls.FileWCSessionStore
+import org.walletconnect.impls.MoshiPayloadAdapter
+import org.walletconnect.impls.OkHttpTransport
 import pm.gnosis.mnemonic.Bip39
 import pm.gnosis.mnemonic.Bip39Generator
 import pm.gnosis.mnemonic.android.AndroidWordListProvider
@@ -51,6 +56,7 @@ import pm.gnosis.svalinn.security.impls.AndroidKeyStorage
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import timber.log.Timber
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 @ExperimentalCoroutinesApi
@@ -66,7 +72,10 @@ class SafeApp : Application() {
             modules(listOf(coreModule, apiModule, repositoryModule, viewModelModule))
         }
 
-        getKoin().get<CrashReporter>().init()
+        getKoin().apply {
+            get<CrashReporter>().init()
+            get<WalletConnectRepository>().init()
+        }
     }
 
 
@@ -79,8 +88,10 @@ class SafeApp : Application() {
                 .connectTimeout(20, TimeUnit.SECONDS)
                 .readTimeout(20, TimeUnit.SECONDS)
                 .writeTimeout(20, TimeUnit.SECONDS)
-                .addInterceptor(HttpLoggingInterceptor(object: HttpLoggingInterceptor.Logger {
-                    override fun log(message: String) { Timber.i(message) }
+                .addInterceptor(HttpLoggingInterceptor(object : HttpLoggingInterceptor.Logger {
+                    override fun log(message: String) {
+                        Timber.i(message)
+                    }
                 }).apply { level = HttpLoggingInterceptor.Level.BODY })
                 .build()
         }
@@ -98,6 +109,8 @@ class SafeApp : Application() {
         single<Bip39> { Bip39Generator(AndroidWordListProvider(get())) }
 
         single<CrashReporter> { FirebaseCrashReporter() }
+
+        single<LocalNotificationManager> { AndroidLocalNotificationManager(get()) }
 
         // Storage / Security
 
@@ -169,6 +182,13 @@ class SafeApp : Application() {
     private val repositoryModule = module {
         single<SafeRepository> { SafeRepositoryImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
         single<TokensRepository> { GnosisServiceTokenRepository(get(), get()) }
+        single<WalletConnectRepository> {
+            val sessionStore = FileWCSessionStore(File(get<Context>().cacheDir, "session_store.json").apply { createNewFile() }, get())
+            val sessionPayloadAdapter = MoshiPayloadAdapter(get())
+            val sessionTransportBuilder = OkHttpTransport.Builder(get(), get())
+            val sessionBuilder = WCSessionBuilder(sessionStore, sessionPayloadAdapter, sessionTransportBuilder)
+            WalletConnectRepositoryImpl(get(), get(), get(), get(), sessionStore, sessionBuilder)
+        }
     }
 
     @ExperimentalCoroutinesApi
@@ -183,6 +203,7 @@ class SafeApp : Application() {
         viewModel<ManageAllowancesContract> { ManageAllowancesViewModel(get(), get()) }
         viewModel<NewInstantTransferContract> { NewInstantTransferViewModel(get(), get()) }
         viewModel<InstantTransferListContract> { InstantTransferListViewModel(get()) }
+        viewModel<WalletConnectStatusContract> { WalletConnectStatusViewModel(get()) }
         viewModel<TransactionConfirmationContract> { (
                                                          safe: Solidity.Address,
                                                          transactionHash: String?,

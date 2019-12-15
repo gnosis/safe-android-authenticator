@@ -6,12 +6,17 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.WriterException
 import com.google.zxing.qrcode.QRCodeWriter
+import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
+import pm.gnosis.model.Solidity
 
 fun String.asMiddleEllipsized(boundariesLength: Int): String {
     return if (this.length > boundariesLength * 2)
         "${this.subSequence(0, boundariesLength)}...${this.subSequence(this.length - boundariesLength, this.length)}"
     else this
 }
+
+fun Solidity.Address.shortChecksumString() =
+    asEthereumAddressChecksumString().asMiddleEllipsized(4)
 
 fun String.generateQrCode(width: Int, height: Int, backgroundColor: Int = Color.WHITE, options: Map<EncodeHintType, String>? = null): Bitmap {
     val writer = QRCodeWriter()
