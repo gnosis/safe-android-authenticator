@@ -46,10 +46,10 @@ class InstantTransferListViewModel(
         loadingLaunch {
             updateState { copy(loading = true) }
             val executedTransfers = safeRepository.loadExecutedInstantTransfers().map {
-                ListEntry.InstantTransferMeta(it, R.id.entry_type_executed_instant_transfer)
+                InstantTransferMetaEntry(it, R.id.entry_type_executed_instant_transfer)
             }
             val pendingTransfers = safeRepository.loadPendingInstantTransfers().map {
-                ListEntry.InstantTransferMeta(it, R.id.entry_type_pending_instant_transfer)
+                InstantTransferMetaEntry(it, R.id.entry_type_pending_instant_transfer)
             }
             val transfers = mutableListOf<ListEntry>()
                 .maybeAddWithHeader("Pending", pendingTransfers)
@@ -94,7 +94,7 @@ class InstantTransferListScreen : BaseFragment<InstantTransferListContract.State
 
     inner class TransactionAdapter : ListAdapter<ListEntry, ListEntryViewHolder>(DiffCallback()) {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            viewType.typeToViewHolder(parent, picasso)
+            viewType.typeToTransactionViewHolder(parent, picasso)
 
         override fun getItemViewType(position: Int): Int {
             return getItem(position).type

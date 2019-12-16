@@ -23,7 +23,6 @@ abstract class LoadingViewModel<T : BaseViewModel.State> : BaseViewModel<T>() {
 
     abstract fun onLoadingError(state: T, e: Throwable): T
 
-    protected fun loadingLaunch(block: suspend CoroutineScope.() -> Unit) {
+    protected fun loadingLaunch(block: suspend CoroutineScope.() -> Unit) =
         safeLaunch(loadingErrorHandler, block)
-    }
 }

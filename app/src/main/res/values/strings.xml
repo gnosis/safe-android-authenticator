@@ -29,4 +29,8 @@
     <string name="channel_description_wallet_connect_sessions">Updates for WalletConnect sessions</string>
     <string name="notification_new_transaction_request">New transaction request to review</string>
     <string name="unknown_dapp">Unknown Dapp</string>
+    <string name="continue_action">Continue</string>
+    <string name="instant_transfer_address_message">Enter the destination address for this transaction. Scan a QR code or paste from clipboard.</string>
+    <string name="address_input_hint">Enter Address</string>
+    <string name="search_hint">Search</string>
 </resources>

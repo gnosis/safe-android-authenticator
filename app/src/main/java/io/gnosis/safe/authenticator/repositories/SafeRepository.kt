@@ -15,6 +15,7 @@ import io.gnosis.safe.authenticator.db.InstantTransferDb
 import io.gnosis.safe.authenticator.repositories.SafeRepository.Companion.ALLOWANCE_MODULE_ADDRESS
 import io.gnosis.safe.authenticator.utils.asMiddleEllipsized
 import io.gnosis.safe.authenticator.utils.nullOnThrow
+import io.gnosis.safe.authenticator.utils.performCall
 import io.gnosis.safe.authenticator.utils.shiftedString
 import kotlinx.coroutines.rx2.await
 import okio.ByteString
@@ -199,33 +200,11 @@ class SafeRepositoryImpl(
     }
 
     override suspend fun loadModules(safe: Solidity.Address): List<Solidity.Address> =
-        jsonRpcApi.post(
-            JsonRpcApi.JsonRpcRequest(
-                method = "eth_call",
-                params = listOf(
-                    mapOf(
-                        "to" to safe,
-                        "data" to GnosisSafe.GetModules.encode()
-                    ),
-                    "latest"
-                )
-            )
-        ).result!!.let { GnosisSafe.GetModules.decode(it).param0.items }
+        jsonRpcApi.performCall(safe, GnosisSafe.GetModules.encode()).let { GnosisSafe.GetModules.decode(it).param0.items }
 
     override suspend fun loadAllowances(safe: Solidity.Address): List<SafeRepository.Allowance> {
         val delegate = loadDeviceId()
-        val tokensResp = jsonRpcApi.post(
-            JsonRpcApi.JsonRpcRequest(
-                method = "eth_call",
-                params = listOf(
-                    mapOf(
-                        "to" to ALLOWANCE_MODULE_ADDRESS,
-                        "data" to AllowanceModule.GetTokens.encode(safe, delegate)
-                    ),
-                    "latest"
-                )
-            )
-        ).result!!
+        val tokensResp = jsonRpcApi.performCall(ALLOWANCE_MODULE_ADDRESS, AllowanceModule.GetTokens.encode(safe, delegate))
         val tokens = AllowanceModule.GetTokens.decode(tokensResp).param0.items
         return jsonRpcApi.post(
             tokens.mapIndexed { index, address ->
@@ -257,18 +236,10 @@ class SafeRepositoryImpl(
     }
 
     override suspend fun loadAllowancesDelegates(safe: Solidity.Address): List<Solidity.Address> {
-        val delegatesResp = jsonRpcApi.post(
-            JsonRpcApi.JsonRpcRequest(
-                method = "eth_call",
-                params = listOf(
-                    mapOf(
-                        "to" to ALLOWANCE_MODULE_ADDRESS,
-                        "data" to AllowanceModule.GetDelegates.encode(safe, Solidity.UInt48(BigInteger.ZERO), Solidity.UInt8(BigInteger.valueOf(100)))
-                    ),
-                    "latest"
-                )
-            )
-        ).result!!
+        val delegatesResp = jsonRpcApi.performCall(
+            ALLOWANCE_MODULE_ADDRESS,
+            AllowanceModule.GetDelegates.encode(safe, Solidity.UInt48(BigInteger.ZERO), Solidity.UInt8(BigInteger.valueOf(100)))
+        )
         return AllowanceModule.GetDelegates.decode(delegatesResp).results.items
     }
 
@@ -280,26 +251,18 @@ class SafeRepositoryImpl(
         paymentToken: Solidity.Address,
         payment: BigInteger,
         nonce: BigInteger
-    ) = jsonRpcApi.post(
-        JsonRpcApi.JsonRpcRequest(
-            method = "eth_call",
-            params = listOf(
-                mapOf(
-                    "to" to ALLOWANCE_MODULE_ADDRESS,
-                    "data" to AllowanceModule.GenerateTransferHash.encode(
-                        safe,
-                        token,
-                        to,
-                        Solidity.UInt96(amount),
-                        paymentToken,
-                        Solidity.UInt96(payment),
-                        Solidity.UInt16(nonce)
-                    )
-                ),
-                "latest"
-            )
+    ) = jsonRpcApi.performCall(
+        ALLOWANCE_MODULE_ADDRESS,
+        AllowanceModule.GenerateTransferHash.encode(
+            safe,
+            token,
+            to,
+            Solidity.UInt96(amount),
+            paymentToken,
+            Solidity.UInt96(payment),
+            Solidity.UInt16(nonce)
         )
-    ).result!!.let {
+    ).let {
         AllowanceModule.GenerateTransferHash.decode(it).param0.bytes
     }
 
@@ -410,21 +373,8 @@ class SafeRepositoryImpl(
         return SafeRepository.SafeInfo(safe, masterCopy, owners, threshold, nonce)
     }
 
-    override suspend fun loadSafeNonce(safe: Solidity.Address): BigInteger {
-        return GnosisSafe.Nonce.decode(
-            jsonRpcApi.post(
-                JsonRpcApi.JsonRpcRequest(
-                    method = "eth_call",
-                    params = listOf(
-                        mapOf(
-                            "to" to safe,
-                            "data" to GnosisSafe.Nonce.encode()
-                        ), "latest"
-                    )
-                )
-            ).result!!
-        ).param0.value
-    }
+    override suspend fun loadSafeNonce(safe: Solidity.Address): BigInteger =
+        GnosisSafe.Nonce.decode(jsonRpcApi.performCall(safe, GnosisSafe.Nonce.encode())).param0.value
 
     override suspend fun loadPendingTransactions(safe: Solidity.Address): List<SafeRepository.ServiceSafeTx> =
         transactionServiceApi.loadTransactions(safe.asEthereumAddressChecksumString()).results.map { it.toLocal() }
@@ -536,24 +486,17 @@ class SafeRepositoryImpl(
 
 
     private suspend fun estimateTx(safe: Solidity.Address, transaction: SafeRepository.SafeTx): BigInteger {
-        val response = jsonRpcApi.post(
-            JsonRpcApi.JsonRpcRequest(
-                method = "eth_call",
-                params = listOf(
-                    mapOf(
-                        "from" to safe,
-                        "to" to safe,
-                        "data" to GnosisSafe.RequiredTxGas.encode(
-                            transaction.to,
-                            Solidity.UInt256(transaction.value),
-                            Solidity.Bytes(transaction.data.hexStringToByteArray()),
-                            Solidity.UInt8(transaction.operation.id.toBigInteger())
-                        )
-                    ), "latest"
-                )
+        val response = jsonRpcApi.performCall(
+            from = safe,
+            to = safe,
+            data = GnosisSafe.RequiredTxGas.encode(
+                transaction.to,
+                Solidity.UInt256(transaction.value),
+                Solidity.Bytes(transaction.data.hexStringToByteArray()),
+                Solidity.UInt8(transaction.operation.id.toBigInteger())
             )
-        ).result!!
-        if (response == "0x" || !response.startsWith(ESTIMATE_RESPONSE_PREFIX)) throw IllegalStateException("Could not estimate transaction!")
+        )
+        if (!response.startsWith(ESTIMATE_RESPONSE_PREFIX)) throw IllegalStateException("Could not estimate transaction!")
         return response.removePrefix(ESTIMATE_RESPONSE_PREFIX).hexAsBigInteger() + BigInteger.valueOf(10000)
     }
 

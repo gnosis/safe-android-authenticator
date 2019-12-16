@@ -10,6 +10,7 @@ import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.liveData
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.repositories.SafeRepository
+import io.gnosis.safe.authenticator.ui.address.AddressInputActivity
 import io.gnosis.safe.authenticator.ui.base.BaseActivity
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
@@ -23,6 +24,7 @@ import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
 import pm.gnosis.model.Solidity
 import pm.gnosis.svalinn.common.utils.hideSoftKeyboard
 import pm.gnosis.utils.asEthereumAddress
+import pm.gnosis.utils.asEthereumAddressString
 import retrofit2.HttpException
 import java.lang.Exception
 import java.lang.IllegalArgumentException

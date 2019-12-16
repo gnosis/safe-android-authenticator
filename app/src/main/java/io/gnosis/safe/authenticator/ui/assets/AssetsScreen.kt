@@ -20,6 +20,7 @@ import io.gnosis.safe.authenticator.ui.base.BaseFragment
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
 import io.gnosis.safe.authenticator.ui.instant.NewInstantTransferActivity
+import io.gnosis.safe.authenticator.ui.instant.NewInstantTransferAddressInputActivity
 import io.gnosis.safe.authenticator.utils.*
 import kotlinx.android.synthetic.main.item_token_balance.view.*
 import kotlinx.android.synthetic.main.screen_assets.*
@@ -163,7 +164,7 @@ class AssetsScreen : BaseFragment<AssetsContract.State, AssetsContract>() {
         fun bind(item: AssetsContract.TokenBalance) {
             if (showOnlyAllowance) {
                 itemView.setOnClickListener {
-                    startActivity(NewInstantTransferActivity.createIntent(context!!, item.address))
+                    startActivity(NewInstantTransferAddressInputActivity.createIntent(context!!, item.address))
                 }
             }
             itemView.token_balance_token.text = item.info?.symbol ?: item.address.asEthereumAddressChecksumString().substring(0, 6)

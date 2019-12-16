@@ -12,7 +12,6 @@ import com.squareup.picasso.Picasso
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.ui.adapter.*
-import io.gnosis.safe.authenticator.ui.adapter.ListEntry.TransactionMeta
 import io.gnosis.safe.authenticator.ui.base.BaseFragment
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
@@ -53,21 +52,21 @@ class TransactionsViewModel(
             val txs = safeRepository.loadPendingTransactions(safe)
             val deviceId = safeRepository.loadDeviceId()
             val nonce = safeRepository.loadSafeNonce(safe)
-            val pendingTx = mutableListOf<TransactionMeta>()
-            val executedTx = mutableListOf<TransactionMeta>()
+            val pendingTx = mutableListOf<TransactionMetaEntry>()
+            val executedTx = mutableListOf<TransactionMetaEntry>()
             txs.forEach {
                 val transactionInfo = nullOnThrow { safeRepository.loadTransactionInformation(safe, it.tx) }
                 val txState = when {
-                    it.executed -> TransactionMeta.State.EXECUTED
-                    it.execInfo.nonce < nonce -> TransactionMeta.State.CANCELED
-                    it.confirmations.find { (address, _) -> address == deviceId } != null -> TransactionMeta.State.CONFIRMED
-                    else -> TransactionMeta.State.PENDING
+                    it.executed -> TransactionMetaEntry.State.EXECUTED
+                    it.execInfo.nonce < nonce -> TransactionMetaEntry.State.CANCELED
+                    it.confirmations.find { (address, _) -> address == deviceId } != null -> TransactionMetaEntry.State.CONFIRMED
+                    else -> TransactionMetaEntry.State.PENDING
                 }
                 when (txState) {
-                    TransactionMeta.State.EXECUTED, TransactionMeta.State.CANCELED ->
-                        executedTx += TransactionMeta(it.hash, transactionInfo, it.tx, it.execInfo, txState, R.id.entry_type_executed_tx)
-                    TransactionMeta.State.CONFIRMED, TransactionMeta.State.PENDING ->
-                        pendingTx += TransactionMeta(it.hash, transactionInfo, it.tx, it.execInfo, txState, R.id.entry_type_pending_tx)
+                    TransactionMetaEntry.State.EXECUTED, TransactionMetaEntry.State.CANCELED ->
+                        executedTx += TransactionMetaEntry(it.hash, transactionInfo, it.tx, it.execInfo, txState, R.id.entry_type_executed_tx)
+                    TransactionMetaEntry.State.CONFIRMED, TransactionMetaEntry.State.PENDING ->
+                        pendingTx += TransactionMetaEntry(it.hash, transactionInfo, it.tx, it.execInfo, txState, R.id.entry_type_pending_tx)
                 }
             }
             val transactions = mutableListOf<ListEntry>()
@@ -121,9 +120,9 @@ class TransactionsScreen : BaseFragment<TransactionsContract.State, Transactions
     inner class TransactionAdapter : ListAdapter<ListEntry, ListEntryViewHolder>(DiffCallback()) {
         var safe: Solidity.Address? = null
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            viewType.typeToViewHolder(parent, picasso, ::onSelected)
+            viewType.typeToTransactionViewHolder(parent, picasso, ::onSelected)
 
-        private fun onSelected(entry: TransactionMeta) {
+        private fun onSelected(entry: TransactionMetaEntry) {
             val safe = safe ?: return
             activity?.let { TransactionConfirmationDialog(it, safe, entry.hash, entry.tx, entry.execInfo, this@TransactionsScreen).show() }
         }

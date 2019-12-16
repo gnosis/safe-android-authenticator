@@ -56,6 +56,13 @@
             android:name=".ui.walletconnect.WalletConnectStatusActivity"
             android:launchMode="singleTop"
             android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.instant.NewInstantTransferAddressInputActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.address.AddressInputActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustNothing" />
 
         <service android:name=".services.BridgeService" />
     </application>

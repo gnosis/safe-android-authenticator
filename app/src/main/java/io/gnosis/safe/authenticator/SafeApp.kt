@@ -17,6 +17,8 @@ import io.gnosis.safe.authenticator.services.AndroidLocalNotificationManager
 import io.gnosis.safe.authenticator.services.CrashReporter
 import io.gnosis.safe.authenticator.services.FirebaseCrashReporter
 import io.gnosis.safe.authenticator.services.LocalNotificationManager
+import io.gnosis.safe.authenticator.ui.address.AddressInputContract
+import io.gnosis.safe.authenticator.ui.address.AddressInputViewModel
 import io.gnosis.safe.authenticator.ui.assets.AssetsContract
 import io.gnosis.safe.authenticator.ui.assets.AssetsViewModel
 import io.gnosis.safe.authenticator.ui.instant.InstantTransferListContract
@@ -180,6 +182,7 @@ class SafeApp : Application() {
     }
 
     private val repositoryModule = module {
+        single<AddressRepository> { AddressRepositoryImpl(get(), get()) }
         single<SafeRepository> { SafeRepositoryImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
         single<TokensRepository> { GnosisServiceTokenRepository(get(), get()) }
         single<WalletConnectRepository> {
@@ -195,6 +198,7 @@ class SafeApp : Application() {
     private val viewModelModule = module {
         viewModel<SplashContract> { SplashViewModel(get(), get()) }
         viewModel<ConnectSafeContract> { ConnectSafeViewModel(get(), get()) }
+        viewModel<AddressInputContract> { AddressInputViewModel(get(), get()) }
         viewModel<AssetsContract> { AssetsViewModel(get(), get()) }
         viewModel<TransactionsContract> { TransactionsViewModel(get()) }
         viewModel<SettingsContract> { SettingsViewModel(get()) }

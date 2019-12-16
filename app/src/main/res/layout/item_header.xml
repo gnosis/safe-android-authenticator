@@ -6,7 +6,10 @@
     android:layout_height="wrap_content"
     android:layout_marginStart="8dp"
     android:gravity="start"
-    android:padding="8dp"
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="4dp"
     android:textColor="@color/darkText"
     android:textStyle="bold"
     tools:text="Ether transfer" />
