@@ -69,9 +69,7 @@ class BridgeService : Service(), CoroutineScope {
     }
 
     private fun notification(): Notification {
-        val intent = WalletConnectStatusActivity.createIntent(this).apply {
-            type = "service-sticky"
-        }
+        val intent = WalletConnectStatusActivity.createIntent(this)
         val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT)
         val message = "Click to view WalletConnect connection status"
         return localNotificationManager.builder(
