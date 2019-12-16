@@ -183,7 +183,7 @@ class SafeApp : Application() {
 
     private val repositoryModule = module {
         single<AddressRepository> { AddressRepositoryImpl(get(), get()) }
-        single<SafeRepository> { SafeRepositoryImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+        single<SafeRepository> { SafeRepositoryImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
         single<TokensRepository> { GnosisServiceTokenRepository(get(), get()) }
         single<WalletConnectRepository> {
             val sessionStore = FileWCSessionStore(File(get<Context>().cacheDir, "session_store.json").apply { createNewFile() }, get())

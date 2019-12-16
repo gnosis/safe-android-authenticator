@@ -13,10 +13,8 @@ import io.gnosis.safe.authenticator.data.models.ServiceTransactionRequest
 import io.gnosis.safe.authenticator.db.InstantTransferDao
 import io.gnosis.safe.authenticator.db.InstantTransferDb
 import io.gnosis.safe.authenticator.repositories.SafeRepository.Companion.ALLOWANCE_MODULE_ADDRESS
-import io.gnosis.safe.authenticator.utils.asMiddleEllipsized
+import io.gnosis.safe.authenticator.utils.*
 import io.gnosis.safe.authenticator.utils.nullOnThrow
-import io.gnosis.safe.authenticator.utils.performCall
-import io.gnosis.safe.authenticator.utils.shiftedString
 import kotlinx.coroutines.rx2.await
 import okio.ByteString
 import pm.gnosis.crypto.ECDSASignature
@@ -154,6 +152,7 @@ class SafeRepositoryImpl(
     private val instantTransferServiceApi: InstantTransferServiceApi,
     private val instantTransferDao: InstantTransferDao,
     private val preferencesManager: PreferencesManager,
+    private val addressRepository: AddressRepository,
     private val tokensRepository: TokensRepository
 ) : SafeRepository {
 
@@ -318,7 +317,8 @@ class SafeRepositoryImpl(
                 signature.toSignatureString().addHexPrefix()
             )
         )
-        nullOnThrow { instantTransferDao.insert(InstantTransferDb(response.hash, allowance.token, to, amount, allowance.nonce)) }
+        loggedTry { addressRepository.addRecentAddress(to) }
+        loggedTry { instantTransferDao.insert(InstantTransferDb(response.hash, allowance.token, to, amount, allowance.nonce)) }
     }
 
     override suspend fun loadTokenBalances(safe: Solidity.Address): List<Pair<Solidity.Address, BigInteger>> =
