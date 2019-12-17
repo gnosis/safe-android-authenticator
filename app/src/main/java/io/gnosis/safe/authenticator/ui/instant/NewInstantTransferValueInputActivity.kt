@@ -132,7 +132,7 @@ class NewInstantTransferValueInputActivity : BaseActivity<NewInstantTransferValu
         }
         instant_transfer_value_input_amount.setOnEditorActionListener { _, actionId, _ ->
             when (actionId) {
-                EditorInfo.IME_ACTION_SEND -> {
+                EditorInfo.IME_ACTION_GO -> {
                     instant_transfer_value_input_continue_btn.performClick()
                     true
                 }

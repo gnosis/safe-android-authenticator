@@ -80,7 +80,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="4dp"
         android:hint="0"
-        android:imeOptions="actionSend"
+        android:imeOptions="actionGo"
         android:inputType="numberDecimal"
         android:textSize="40sp"
         app:layout_constraintBottom_toTopOf="@id/instant_transfer_value_input_continue_btn"
