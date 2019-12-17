@@ -1,15 +1,18 @@
 package io.gnosis.safe.authenticator.ui.base
 
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
+import io.gnosis.safe.authenticator.utils.ExceptionUtils
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ConflatedBroadcastChannel
 import timber.log.Timber
 
-@ExperimentalCoroutinesApi
-abstract class BaseViewModel<T : BaseViewModel.State> : ViewModel() {
-    abstract val state: LiveData<T>
+abstract class BaseViewModel<T : BaseViewModel.State>(
+    protected val context: Context
+) : ViewModel() {
 
     protected abstract fun initialState(): T
 
@@ -24,10 +27,17 @@ abstract class BaseViewModel<T : BaseViewModel.State> : ViewModel() {
     @Suppress("LeakingThis")
     protected val stateChannel = ConflatedBroadcastChannel(initialState())
 
+    val state: LiveData<T> = liveData {
+        onStart()
+        for (state in stateChannel.openSubscription()) emit(state)
+    }
+
+    open fun onStart() {}
+
     protected val coroutineErrorHandler by lazy {
         CoroutineExceptionHandler { _, e ->
             Timber.e(e)
-            viewModelScope.launch { updateState(true) { viewAction = ShowToast(e.message ?: "An error occurred"); this } }
+            viewModelScope.launch { updateState(true) { viewAction = ShowToast(ExceptionUtils.extractMessage(context, e)!!); this } }
         }
     }
 

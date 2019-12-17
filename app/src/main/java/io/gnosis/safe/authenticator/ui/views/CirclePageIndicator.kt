@@ -34,6 +34,12 @@ class CirclePageIndicator @JvmOverloads constructor(
             invalidate()
         }
 
+    var defaultCount: Int = 0
+        set(value) {
+            field = value
+            invalidate()
+        }
+
     private val activePaint = Paint().apply {
         style = Paint.Style.FILL
         color = context.getColorCompat(R.color.colorPrimary)
@@ -60,6 +66,11 @@ class CirclePageIndicator @JvmOverloads constructor(
         currentPositionOffset = 0f
     }
 
+    fun setSelectedPage(position: Int) {
+        currentPosition = position
+        viewPager?.currentItem = position
+    }
+
     override fun onPageScrollStateChanged(state: Int) {
         scrollSate = state
     }
@@ -81,7 +92,7 @@ class CirclePageIndicator @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        val count = viewPager?.adapter?.count ?: 0
+        val count = viewPager?.adapter?.count ?: defaultCount
         if (count == 0 || currentPosition >= count) {
             return
         }

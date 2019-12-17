@@ -8,6 +8,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:networkSecurityConfig="@xml/network_security_config"
+        android:resizeableActivity="false"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
@@ -51,11 +52,25 @@
         <activity
             android:name="io.gnosis.safe.authenticator.ui.qr.QRCodeScanActivity"
             android:screenOrientation="portrait" />
-
         <activity
             android:name=".ui.walletconnect.WalletConnectStatusActivity"
             android:launchMode="singleTop"
             android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.instant.NewInstantTransferAddressInputActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.instant.NewInstantTransferValueInputActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.address.AddressInputActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustNothing" />
+        <activity android:name=".ui.instant.NewInstantTransferReviewActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustNothing"
+            />
 
         <service android:name=".services.BridgeService" />
     </application>

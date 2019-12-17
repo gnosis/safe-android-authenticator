@@ -1,5 +1,6 @@
 package io.gnosis.safe.authenticator.ui.assets
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -20,6 +21,7 @@ import io.gnosis.safe.authenticator.ui.base.BaseFragment
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
 import io.gnosis.safe.authenticator.ui.instant.NewInstantTransferActivity
+import io.gnosis.safe.authenticator.ui.instant.NewInstantTransferAddressInputActivity
 import io.gnosis.safe.authenticator.utils.*
 import kotlinx.android.synthetic.main.item_token_balance.view.*
 import kotlinx.android.synthetic.main.screen_assets.*
@@ -30,8 +32,7 @@ import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
 import pm.gnosis.model.Solidity
 import java.math.BigInteger
 
-@ExperimentalCoroutinesApi
-abstract class AssetsContract : LoadingViewModel<AssetsContract.State>() {
+abstract class AssetsContract(context: Context) : LoadingViewModel<AssetsContract.State>(context) {
     abstract fun setup(showOnlyAllowance: Boolean)
     abstract fun loadAssets()
 
@@ -51,21 +52,20 @@ abstract class AssetsContract : LoadingViewModel<AssetsContract.State>() {
     )
 }
 
-@ExperimentalCoroutinesApi
 class AssetsViewModel(
+    context: Context,
     private val safeRepository: SafeRepository,
     private val tokensRepository: TokensRepository
-) : AssetsContract() {
-
-    override val state = liveData {
-        loadAssets()
-        for (event in stateChannel.openSubscription()) emit(event)
-    }
+) : AssetsContract(context) {
 
     private var showOnlyAllowance: Boolean = false
 
     override fun setup(showOnlyAllowance: Boolean) {
         this.showOnlyAllowance = showOnlyAllowance
+    }
+
+    override fun onStart() {
+        loadAssets()
     }
 
     override fun loadAssets() {
@@ -104,7 +104,6 @@ class AssetsViewModel(
 
 }
 
-@ExperimentalCoroutinesApi
 class AssetsScreen : BaseFragment<AssetsContract.State, AssetsContract>() {
     override val viewModel: AssetsContract by viewModel()
     private val picasso: Picasso by inject()
@@ -163,7 +162,7 @@ class AssetsScreen : BaseFragment<AssetsContract.State, AssetsContract>() {
         fun bind(item: AssetsContract.TokenBalance) {
             if (showOnlyAllowance) {
                 itemView.setOnClickListener {
-                    startActivity(NewInstantTransferActivity.createIntent(context!!, item.address))
+                    startActivity(NewInstantTransferAddressInputActivity.createIntent(context!!, item.address))
                 }
             }
             itemView.token_balance_token.text = item.info?.symbol ?: item.address.asEthereumAddressChecksumString().substring(0, 6)

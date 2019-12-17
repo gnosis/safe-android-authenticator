@@ -7,7 +7,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
-@ExperimentalCoroutinesApi
 abstract class BaseFragment<S: BaseViewModel.State, T: BaseViewModel<S>>: Fragment() {
 
     protected abstract val viewModel: T

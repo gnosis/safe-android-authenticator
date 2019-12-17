@@ -26,8 +26,7 @@ import pm.gnosis.utils.asEthereumAddress
 import pm.gnosis.utils.asEthereumAddressString
 import java.math.BigDecimal
 
-@ExperimentalCoroutinesApi
-abstract class NewInstantTransferContract : LoadingViewModel<NewInstantTransferContract.State>() {
+abstract class NewInstantTransferContract(context: Context) : LoadingViewModel<NewInstantTransferContract.State>(context) {
     abstract fun submitInstantTransfer(
         allowance: WrappedAllowance?,
         to: String,
@@ -53,15 +52,14 @@ abstract class NewInstantTransferContract : LoadingViewModel<NewInstantTransferC
     }
 }
 
-@ExperimentalCoroutinesApi
 class NewInstantTransferViewModel(
+    context: Context,
     private val safeRepository: SafeRepository,
     private val tokensRepository: TokensRepository
-) : NewInstantTransferContract() {
+) : NewInstantTransferContract(context) {
 
-    override val state = liveData {
+    override fun onStart() {
         loadAllowances()
-        for (event in stateChannel.openSubscription()) emit(event)
     }
 
     override fun submitInstantTransfer(
@@ -103,7 +101,6 @@ class NewInstantTransferViewModel(
 
 }
 
-@ExperimentalCoroutinesApi
 class NewInstantTransferActivity : BaseActivity<NewInstantTransferContract.State, NewInstantTransferContract>() {
     override val viewModel: NewInstantTransferContract by viewModel()
     private lateinit var spinnerAdapter: ArrayAdapter<NewInstantTransferContract.WrappedAllowance>

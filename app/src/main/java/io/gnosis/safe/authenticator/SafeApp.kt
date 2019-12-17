@@ -17,12 +17,11 @@ import io.gnosis.safe.authenticator.services.AndroidLocalNotificationManager
 import io.gnosis.safe.authenticator.services.CrashReporter
 import io.gnosis.safe.authenticator.services.FirebaseCrashReporter
 import io.gnosis.safe.authenticator.services.LocalNotificationManager
+import io.gnosis.safe.authenticator.ui.address.AddressInputContract
+import io.gnosis.safe.authenticator.ui.address.AddressInputViewModel
 import io.gnosis.safe.authenticator.ui.assets.AssetsContract
 import io.gnosis.safe.authenticator.ui.assets.AssetsViewModel
-import io.gnosis.safe.authenticator.ui.instant.InstantTransferListContract
-import io.gnosis.safe.authenticator.ui.instant.InstantTransferListViewModel
-import io.gnosis.safe.authenticator.ui.instant.NewInstantTransferContract
-import io.gnosis.safe.authenticator.ui.instant.NewInstantTransferViewModel
+import io.gnosis.safe.authenticator.ui.instant.*
 import io.gnosis.safe.authenticator.ui.intro.ConnectSafeContract
 import io.gnosis.safe.authenticator.ui.intro.ConnectSafeViewModel
 import io.gnosis.safe.authenticator.ui.settings.*
@@ -31,7 +30,6 @@ import io.gnosis.safe.authenticator.ui.splash.SplashViewModel
 import io.gnosis.safe.authenticator.ui.transactions.*
 import io.gnosis.safe.authenticator.ui.walletconnect.WalletConnectStatusContract
 import io.gnosis.safe.authenticator.ui.walletconnect.WalletConnectStatusViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.android.ext.android.getKoin
@@ -57,9 +55,9 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import timber.log.Timber
 import java.io.File
+import java.math.BigInteger
 import java.util.concurrent.TimeUnit
 
-@ExperimentalCoroutinesApi
 class SafeApp : Application() {
     override fun onCreate() {
         super.onCreate()
@@ -180,7 +178,8 @@ class SafeApp : Application() {
     }
 
     private val repositoryModule = module {
-        single<SafeRepository> { SafeRepositoryImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+        single<AddressRepository> { AddressRepositoryImpl(get(), get()) }
+        single<SafeRepository> { SafeRepositoryImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
         single<TokensRepository> { GnosisServiceTokenRepository(get(), get()) }
         single<WalletConnectRepository> {
             val sessionStore = FileWCSessionStore(File(get<Context>().cacheDir, "session_store.json").apply { createNewFile() }, get())
@@ -191,26 +190,36 @@ class SafeApp : Application() {
         }
     }
 
-    @ExperimentalCoroutinesApi
     private val viewModelModule = module {
         viewModel<SplashContract> { SplashViewModel(get(), get()) }
         viewModel<ConnectSafeContract> { ConnectSafeViewModel(get(), get()) }
-        viewModel<AssetsContract> { AssetsViewModel(get(), get()) }
-        viewModel<TransactionsContract> { TransactionsViewModel(get()) }
-        viewModel<SettingsContract> { SettingsViewModel(get()) }
-        viewModel<NewTransactionContract> { NewTransactionViewModel(get()) }
-        viewModel<SetAllowanceContract> { SetAllowanceViewModel(get()) }
-        viewModel<ManageAllowancesContract> { ManageAllowancesViewModel(get(), get()) }
-        viewModel<NewInstantTransferContract> { NewInstantTransferViewModel(get(), get()) }
-        viewModel<InstantTransferListContract> { InstantTransferListViewModel(get()) }
-        viewModel<WalletConnectStatusContract> { WalletConnectStatusViewModel(get()) }
+        viewModel<AddressInputContract> { AddressInputViewModel(get(), get()) }
+        viewModel<AssetsContract> { AssetsViewModel(get(), get(), get()) }
+        viewModel<TransactionsContract> { TransactionsViewModel(get(), get()) }
+        viewModel<SettingsContract> { SettingsViewModel(get(), get()) }
+        viewModel<NewTransactionContract> { NewTransactionViewModel(get(), get()) }
+        viewModel<SetAllowanceContract> { SetAllowanceViewModel(get(), get()) }
+        viewModel<ManageAllowancesContract> { ManageAllowancesViewModel(get(), get(), get()) }
+        viewModel<NewInstantTransferContract> { NewInstantTransferViewModel(get(), get(), get()) }
+        viewModel<NewInstantTransferValueInputContract> { (token: Solidity.Address) ->
+            NewInstantTransferValueInputViewModel(get(), get(), get(), token)
+        }
+        viewModel<NewInstantTransferReviewContract> { (
+                                                          token: Solidity.Address,
+                                                          recipient: Solidity.Address,
+                                                          amount: BigInteger
+                                                      ) ->
+            NewInstantTransferReviewViewModel(get(), get(), get(), token, recipient, amount)
+        }
+        viewModel<InstantTransferListContract> { InstantTransferListViewModel(get(), get()) }
+        viewModel<WalletConnectStatusContract> { WalletConnectStatusViewModel(get(), get()) }
         viewModel<TransactionConfirmationContract> { (
                                                          safe: Solidity.Address,
                                                          transactionHash: String?,
                                                          transaction: SafeRepository.SafeTx,
                                                          executionInfo: SafeRepository.SafeTxExecInfo?
                                                      ) ->
-            TransactionConfirmationViewModel(safe, transactionHash, transaction, executionInfo, get())
+            TransactionConfirmationViewModel(get(), safe, transactionHash, transaction, executionInfo, get())
         }
     }
 }

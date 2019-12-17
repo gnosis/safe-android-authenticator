@@ -7,7 +7,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
-import androidx.lifecycle.liveData
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
@@ -31,8 +30,7 @@ import pm.gnosis.model.Solidity
 import pm.gnosis.utils.asEthereumAddress
 import java.math.BigInteger
 
-@ExperimentalCoroutinesApi
-abstract class ManageAllowancesContract : LoadingViewModel<ManageAllowancesContract.State>() {
+abstract class ManageAllowancesContract(context: Context) : LoadingViewModel<ManageAllowancesContract.State>(context) {
     abstract fun loadAllowances()
 
     data class State(
@@ -51,15 +49,14 @@ abstract class ManageAllowancesContract : LoadingViewModel<ManageAllowancesContr
     )
 }
 
-@ExperimentalCoroutinesApi
 class ManageAllowancesViewModel(
+    context: Context,
     private val safeRepository: SafeRepository,
     private val tokensRepository: TokensRepository
-) : ManageAllowancesContract() {
+) : ManageAllowancesContract(context) {
 
-    override val state = liveData {
+    override fun onStart() {
         loadAllowances()
-        for (event in stateChannel.openSubscription()) emit(event)
     }
 
     override fun loadAllowances() {
@@ -106,7 +103,6 @@ class ManageAllowancesViewModel(
 
 }
 
-@ExperimentalCoroutinesApi
 class ManageAllowancesActivity : BaseActivity<ManageAllowancesContract.State, ManageAllowancesContract>(),
     TransactionConfirmationDialog.Callback {
     override val viewModel: ManageAllowancesContract by viewModel()

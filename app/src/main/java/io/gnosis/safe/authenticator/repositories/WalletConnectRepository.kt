@@ -172,7 +172,7 @@ class WalletConnectRepositoryImpl(
                 val notification = notificationManager.builder(
                     peerMeta?.name ?: context.getString(R.string.unknown_dapp),
                     context.getString(R.string.notification_new_transaction_request),
-                    PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT),
+                    PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT),
                     CHANNEL_WALLET_CONNECT_REQUESTS
                 )
                     .setSubText(safe.shortChecksumString())

@@ -13,8 +13,7 @@ import io.gnosis.safe.authenticator.utils.nullOnThrow
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-@ExperimentalCoroutinesApi
-abstract class SplashContract : BaseViewModel<SplashContract.State>() {
+abstract class SplashContract(context: Context) : BaseViewModel<SplashContract.State>(context) {
     data class State(
         val next: Intent?,
         override var viewAction: ViewAction?
@@ -22,15 +21,13 @@ abstract class SplashContract : BaseViewModel<SplashContract.State>() {
         BaseViewModel.State
 }
 
-@ExperimentalCoroutinesApi
 class SplashViewModel(
-    private val context: Context,
+    context: Context,
     private val safeRepository: SafeRepository
-) : SplashContract() {
+) : SplashContract(context) {
 
-    override val state = liveData {
+    override fun onStart() {
         checkState()
-        for (event in stateChannel.openSubscription()) emit(event)
     }
 
     private fun checkState() {
@@ -46,7 +43,6 @@ class SplashViewModel(
 
 }
 
-@ExperimentalCoroutinesApi
 class SplashActivity : BaseActivity<SplashContract.State, SplashContract>() {
     override val viewModel: SplashContract by viewModel()
 
