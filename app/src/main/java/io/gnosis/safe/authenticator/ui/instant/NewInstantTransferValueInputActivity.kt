@@ -2,11 +2,10 @@ package io.gnosis.safe.authenticator.ui.instant
 
 import android.content.Context
 import android.content.Intent
-import android.content.res.Configuration
 import android.os.Bundle
 import android.os.Handler
 import android.view.inputmethod.EditorInfo
-import androidx.core.view.WindowInsetsCompat
+import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import io.gnosis.safe.authenticator.R
@@ -128,12 +127,14 @@ class NewInstantTransferValueInputActivity : BaseActivity<NewInstantTransferValu
         // use android.R.id.content to check keyboard
         instant_transfer_value_input_back_btn.setOnClickListener { onBackPressed() }
         instant_transfer_value_input_continue_btn.setOnClickListener {
+            println("next")
             // TODO start next activity
         }
         instant_transfer_value_input_amount.setOnEditorActionListener { _, actionId, _ ->
             when (actionId) {
                 EditorInfo.IME_ACTION_GO -> {
-                    instant_transfer_value_input_continue_btn.performClick()
+                    if (instant_transfer_value_input_continue_btn.isEnabled)
+                        instant_transfer_value_input_continue_btn.performClick()
                     true
                 }
                 else -> false
