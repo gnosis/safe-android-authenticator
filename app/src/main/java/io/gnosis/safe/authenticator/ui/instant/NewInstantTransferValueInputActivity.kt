@@ -70,7 +70,8 @@ class NewInstantTransferValueInputViewModel(
                 }
             }
             val balanceJob = launch {
-                tokenBalance ?: safeRepository.loadTokenBalances(safe).find { (address) -> address == token }!!.second.let { tokenBalance = it }
+                tokenBalance ?: safeRepository.loadTokenBalances(safe)
+                    .find { balance -> balance.tokenInfo.address == token }!!.let { tokenBalance = it.balance }
             }
             val allowanceJob = launch {
                 tokenAllowance ?: safeRepository.loadAllowance(safe, token).run { tokenAllowance = amount - spent }
