@@ -16,8 +16,7 @@ import pm.gnosis.utils.*
 import pm.gnosis.utils.toHexString
 import java.math.BigInteger
 
-@ExperimentalCoroutinesApi
-abstract class NewTransactionContract : LoadingViewModel<NewTransactionContract.State>() {
+abstract class NewTransactionContract(context: Context) : LoadingViewModel<NewTransactionContract.State>(context) {
     abstract fun submitTransaction(
         to: String,
         value: String,
@@ -34,14 +33,13 @@ abstract class NewTransactionContract : LoadingViewModel<NewTransactionContract.
         BaseViewModel.State
 }
 
-@ExperimentalCoroutinesApi
 class NewTransactionViewModel(
+    context: Context,
     private val safeRepository: SafeRepository
-) : NewTransactionContract() {
+) : NewTransactionContract(context) {
 
-    override val state = liveData {
+    override fun onStart() {
         loadNonce()
-        for (event in stateChannel.openSubscription()) emit(event)
     }
 
     override fun submitTransaction(
@@ -81,7 +79,6 @@ class NewTransactionViewModel(
 
 }
 
-@ExperimentalCoroutinesApi
 class NewTransactionActivity : BaseActivity<NewTransactionContract.State, NewTransactionContract>() {
     override val viewModel: NewTransactionContract by viewModel()
 

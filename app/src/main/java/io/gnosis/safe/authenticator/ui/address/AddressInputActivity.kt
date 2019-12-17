@@ -35,8 +35,7 @@ import pm.gnosis.utils.asEthereumAddress
 import pm.gnosis.utils.asEthereumAddressString
 import pm.gnosis.utils.removeHexPrefix
 
-@ExperimentalCoroutinesApi
-abstract class AddressInputContract : LoadingViewModel<AddressInputContract.State>() {
+abstract class AddressInputContract(context: Context) : LoadingViewModel<AddressInputContract.State>(context) {
     abstract fun handleInput(input: String, force: Boolean)
     abstract fun selectAddress(address: Solidity.Address)
 
@@ -48,15 +47,10 @@ abstract class AddressInputContract : LoadingViewModel<AddressInputContract.Stat
     ) : BaseViewModel.State
 }
 
-@ExperimentalCoroutinesApi
 class AddressInputViewModel(
-    private val context: Context,
+    context: Context,
     private val addressRepository: AddressRepository
-) : AddressInputContract() {
-
-    override val state = liveData {
-        for (event in stateChannel.openSubscription()) emit(event)
-    }
+) : AddressInputContract(context) {
 
     override fun selectAddress(address: Solidity.Address) {
         safeLaunch {

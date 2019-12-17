@@ -8,4 +8,5 @@
     <dimen name="icon_padding">8dp</dimen>
     <dimen name="confirmPeekHeight">144dp</dimen>
     <dimen name="address_input_spinner_offset">96dp</dimen>
+    <dimen name="error_margin_keyboard_check">64dp</dimen>
 </resources>

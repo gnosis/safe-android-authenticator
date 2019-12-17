@@ -37,7 +37,9 @@ class NewInstantTransferAddressInputActivity : AppCompatActivity() {
         selectedToken = intent.getStringExtra(EXTRA_SELECTED_TOKEN)?.asEthereumAddress()
         instant_transfer_address_input_back_btn.setOnClickListener { onBackPressed() }
         instant_transfer_address_input_continue_btn.setOnClickListener {
-            // TODO start next activity
+            val token = selectedToken ?: return@setOnClickListener
+            val address = selectedAddress ?: return@setOnClickListener
+            startActivity(NewInstantTransferValueInputActivity.createIntent(this, token, address))
         }
         instant_transfer_address_input_recipient_scan.setOnClickListener {
             QRCodeScanActivity.startForResult(this, "Please scan an Ethereum address")

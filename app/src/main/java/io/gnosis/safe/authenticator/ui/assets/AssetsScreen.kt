@@ -1,5 +1,6 @@
 package io.gnosis.safe.authenticator.ui.assets
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -31,8 +32,7 @@ import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
 import pm.gnosis.model.Solidity
 import java.math.BigInteger
 
-@ExperimentalCoroutinesApi
-abstract class AssetsContract : LoadingViewModel<AssetsContract.State>() {
+abstract class AssetsContract(context: Context) : LoadingViewModel<AssetsContract.State>(context) {
     abstract fun setup(showOnlyAllowance: Boolean)
     abstract fun loadAssets()
 
@@ -52,21 +52,20 @@ abstract class AssetsContract : LoadingViewModel<AssetsContract.State>() {
     )
 }
 
-@ExperimentalCoroutinesApi
 class AssetsViewModel(
+    context: Context,
     private val safeRepository: SafeRepository,
     private val tokensRepository: TokensRepository
-) : AssetsContract() {
-
-    override val state = liveData {
-        loadAssets()
-        for (event in stateChannel.openSubscription()) emit(event)
-    }
+) : AssetsContract(context) {
 
     private var showOnlyAllowance: Boolean = false
 
     override fun setup(showOnlyAllowance: Boolean) {
         this.showOnlyAllowance = showOnlyAllowance
+    }
+
+    override fun onStart() {
+        loadAssets()
     }
 
     override fun loadAssets() {
@@ -105,7 +104,6 @@ class AssetsViewModel(
 
 }
 
-@ExperimentalCoroutinesApi
 class AssetsScreen : BaseFragment<AssetsContract.State, AssetsContract>() {
     override val viewModel: AssetsContract by viewModel()
     private val picasso: Picasso by inject()

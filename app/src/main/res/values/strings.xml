@@ -10,6 +10,7 @@
     <string name="invalid_ethereum_address">Invalid Ethereum address</string>
     <string name="unknown_safe_address">Unknown Safe address</string>
     <string name="unknown_server_error">Unknown server error</string>
+    <string name="unknown_error">An error occurred</string>
     <string name="error_check_internet_connection">Please make sure to have an internet connection.</string>
     <string name="error_ssl_handshake">Please check whether the time is correctly set.</string>
     <string name="check_address_action">Check address</string>
@@ -31,6 +32,12 @@
     <string name="unknown_dapp">Unknown Dapp</string>
     <string name="continue_action">Continue</string>
     <string name="instant_transfer_address_message">Enter the destination address for this transaction. Scan a QR code or paste from clipboard.</string>
+    <string name="instant_transfer_value_message">Select the amount of %s you would like to transfer.</string>
+    <string name="instant_transfer_value_message_placeholder">Select the amount you would like to transfer.</string>
     <string name="address_input_hint">Enter Address</string>
     <string name="search_hint">Search</string>
+    <string name="amount_hint">Amount</string>
+    <string name="invalid_amount">Invalid amount entered</string>
+    <string name="amount_too_high">Entered amount is too high</string>
+    <string name="available_allowance">Available allowance: %s</string>
 </resources>

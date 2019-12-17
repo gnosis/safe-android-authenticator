@@ -1,6 +1,7 @@
 package io.gnosis.safe.authenticator.ui.transactions
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
@@ -32,8 +33,7 @@ import pm.gnosis.utils.addHexPrefix
 import java.lang.ref.WeakReference
 import java.math.BigInteger
 
-@ExperimentalCoroutinesApi
-abstract class TransactionConfirmationContract : LoadingViewModel<TransactionConfirmationContract.State>() {
+abstract class TransactionConfirmationContract(context: Context) : LoadingViewModel<TransactionConfirmationContract.State>(context) {
     abstract fun confirmTransaction()
     data class State(
         val loading: Boolean,
@@ -55,20 +55,19 @@ abstract class TransactionConfirmationContract : LoadingViewModel<TransactionCon
     }
 }
 
-@ExperimentalCoroutinesApi
 class TransactionConfirmationViewModel(
+    context: Context,
     private val safe: Solidity.Address,
     private val transactionHash: String?,
     private val transaction: SafeRepository.SafeTx,
     private val executionInfo: SafeRepository.SafeTxExecInfo?,
     private val safeRepository: SafeRepository
-) : TransactionConfirmationContract() {
+) : TransactionConfirmationContract(context) {
 
-    override val state = liveData {
+    override fun onStart() {
         loadFees()
         loadTransactionInfo()
         loadTransactionState()
-        for (event in stateChannel.openSubscription()) emit(event)
     }
 
     private fun loadFees() {
@@ -126,7 +125,6 @@ class TransactionConfirmationViewModel(
 
 }
 
-@ExperimentalCoroutinesApi
 class TransactionConfirmationDialog(
     activity: FragmentActivity,
     safe: Solidity.Address,

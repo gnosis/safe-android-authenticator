@@ -16,7 +16,6 @@ interface TokensRepository {
 
     suspend fun loadTokenInfo(token: Solidity.Address): TokenInfo
 
-
     data class TokenInfo(
         val address: Solidity.Address,
         val symbol: String,

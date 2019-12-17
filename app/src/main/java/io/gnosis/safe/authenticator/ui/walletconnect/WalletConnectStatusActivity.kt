@@ -26,7 +26,7 @@ import pm.gnosis.utils.hexAsBigIntegerOrNull
 import pm.gnosis.utils.toHexString
 import java.math.BigInteger
 
-abstract class WalletConnectStatusContract : LoadingViewModel<WalletConnectStatusContract.State>() {
+abstract class WalletConnectStatusContract(context: Context) : LoadingViewModel<WalletConnectStatusContract.State>(context) {
 
     abstract fun confirmTransaction(referenceId: Long?, hash: String)
     abstract fun rejectTransaction(referenceId: Long?)
@@ -44,12 +44,12 @@ abstract class WalletConnectStatusContract : LoadingViewModel<WalletConnectStatu
 }
 
 class WalletConnectStatusViewModel(
+    context: Context,
     private val walletConnectRepository: WalletConnectRepository
-) : WalletConnectStatusContract() {
+) : WalletConnectStatusContract(context) {
 
-    override val state = liveData {
+    override fun onStart() {
         observeRepo()
-        for (event in stateChannel.openSubscription()) emit(event)
     }
 
     private fun observeRepo() {

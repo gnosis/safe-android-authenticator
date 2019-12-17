@@ -22,8 +22,7 @@ import pm.gnosis.utils.asEthereumAddress
 import pm.gnosis.utils.decimalAsBigInteger
 import java.math.BigInteger
 
-@ExperimentalCoroutinesApi
-abstract class SetAllowanceContract : LoadingViewModel<SetAllowanceContract.State>() {
+abstract class SetAllowanceContract(context: Context) : LoadingViewModel<SetAllowanceContract.State>(context) {
     abstract fun setAllowance(
         delegate: String,
         token: String,
@@ -39,14 +38,10 @@ abstract class SetAllowanceContract : LoadingViewModel<SetAllowanceContract.Stat
     data class ConfirmTransaction(val safe: Solidity.Address, val tx: SafeRepository.SafeTx) : ViewAction
 }
 
-@ExperimentalCoroutinesApi
 class SetAllowanceViewModel(
+    context: Context,
     private val safeRepository: SafeRepository
-) : SetAllowanceContract() {
-
-    override val state = liveData {
-        for (event in stateChannel.openSubscription()) emit(event)
-    }
+) : SetAllowanceContract(context) {
 
     private inline fun <T> parseInput(errorMsg: String, func: () -> T?): T = try {
         func.invoke()!!
@@ -94,7 +89,6 @@ class SetAllowanceViewModel(
 
 }
 
-@ExperimentalCoroutinesApi
 class SetAllowanceActivity : BaseActivity<SetAllowanceContract.State, SetAllowanceContract>(), TransactionConfirmationDialog.Callback {
 
     override val viewModel: SetAllowanceContract by viewModel()

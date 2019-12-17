@@ -1,5 +1,6 @@
 package io.gnosis.safe.authenticator.ui.instant
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -20,8 +21,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-@ExperimentalCoroutinesApi
-abstract class InstantTransferListContract : LoadingViewModel<InstantTransferListContract.State>() {
+abstract class InstantTransferListContract(context: Context) : LoadingViewModel<InstantTransferListContract.State>(context) {
     abstract fun loadTransfers()
 
     data class State(
@@ -31,14 +31,13 @@ abstract class InstantTransferListContract : LoadingViewModel<InstantTransferLis
     ) : BaseViewModel.State
 }
 
-@ExperimentalCoroutinesApi
 class InstantTransferListViewModel(
+    context: Context,
     private val safeRepository: SafeRepository
-) : InstantTransferListContract() {
+) : InstantTransferListContract(context) {
 
-    override val state = liveData {
+    override fun onStart() {
         loadTransfers()
-        for (event in stateChannel.openSubscription()) emit(event)
     }
 
     override fun loadTransfers() {
@@ -64,7 +63,6 @@ class InstantTransferListViewModel(
 
 }
 
-@ExperimentalCoroutinesApi
 class InstantTransferListScreen : BaseFragment<InstantTransferListContract.State, InstantTransferListContract>() {
     override val viewModel: InstantTransferListContract by viewModel()
     private val picasso: Picasso by inject()

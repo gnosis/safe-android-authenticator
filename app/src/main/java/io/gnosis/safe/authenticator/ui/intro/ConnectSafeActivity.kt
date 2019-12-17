@@ -30,8 +30,7 @@ import java.lang.Exception
 import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
 
-@ExperimentalCoroutinesApi
-abstract class ConnectSafeContract : LoadingViewModel<ConnectSafeContract.State>() {
+abstract class ConnectSafeContract(context: Context) : LoadingViewModel<ConnectSafeContract.State>(context) {
     abstract fun checkAddress(address: String, immediate: Boolean = false)
     abstract fun setSafe(safe: Solidity.Address)
 
@@ -44,15 +43,13 @@ abstract class ConnectSafeContract : LoadingViewModel<ConnectSafeContract.State>
         BaseViewModel.State
 }
 
-@ExperimentalCoroutinesApi
 class ConnectSafeViewModel(
-    private val context: Context,
+    context: Context,
     private val safeRepository: SafeRepository
-) : ConnectSafeContract() {
+) : ConnectSafeContract(context) {
 
-    override val state = liveData {
+    override fun onStart() {
         checkState()
-        for (event in stateChannel.openSubscription()) emit(event)
     }
 
     private fun checkState() {
@@ -99,7 +96,6 @@ class ConnectSafeViewModel(
     }
 }
 
-@ExperimentalCoroutinesApi
 class ConnectSafeActivity : BaseActivity<ConnectSafeContract.State, ConnectSafeContract>() {
     override val viewModel: ConnectSafeContract by viewModel()
 

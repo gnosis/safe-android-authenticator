@@ -5,7 +5,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
-import androidx.lifecycle.liveData
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.ui.base.BaseActivity
@@ -20,8 +19,7 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
 import pm.gnosis.model.Solidity
 
-@ExperimentalCoroutinesApi
-abstract class SettingsContract : BaseViewModel<SettingsContract.State>() {
+abstract class SettingsContract(context: Context) : BaseViewModel<SettingsContract.State>(context) {
     data class State(
         val safe: Solidity.Address?,
         val formattedSafe: String?,
@@ -31,13 +29,13 @@ abstract class SettingsContract : BaseViewModel<SettingsContract.State>() {
     ) : BaseViewModel.State
 }
 
-@ExperimentalCoroutinesApi
 class SettingsViewModel(
+    context: Context,
     private val safeRepository: SafeRepository
-) : SettingsContract() {
-    override val state = liveData {
+) : SettingsContract(context) {
+
+    override fun onStart() {
         loadDeviceData()
-        for (event in stateChannel.openSubscription()) emit(event)
     }
 
     private fun loadDeviceData() {
@@ -54,7 +52,6 @@ class SettingsViewModel(
 
 }
 
-@ExperimentalCoroutinesApi
 class SettingsActivity : BaseActivity<SettingsContract.State, SettingsContract>() {
     override val viewModel: SettingsContract by viewModel()
 

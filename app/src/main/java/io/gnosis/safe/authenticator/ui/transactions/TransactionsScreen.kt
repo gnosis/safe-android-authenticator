@@ -1,5 +1,6 @@
 package io.gnosis.safe.authenticator.ui.transactions
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -22,8 +23,7 @@ import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import pm.gnosis.model.Solidity
 
-@ExperimentalCoroutinesApi
-abstract class TransactionsContract : LoadingViewModel<TransactionsContract.State>() {
+abstract class TransactionsContract(context: Context) : LoadingViewModel<TransactionsContract.State>(context) {
     abstract fun loadTransactions()
 
     data class State(
@@ -34,14 +34,13 @@ abstract class TransactionsContract : LoadingViewModel<TransactionsContract.Stat
     ) : BaseViewModel.State
 }
 
-@ExperimentalCoroutinesApi
 class TransactionsViewModel(
+    context: Context,
     private val safeRepository: SafeRepository
-) : TransactionsContract() {
+) : TransactionsContract(context) {
 
-    override val state = liveData {
+    override fun onStart() {
         loadTransactions()
-        for (event in stateChannel.openSubscription()) emit(event)
     }
 
     override fun loadTransactions() {
@@ -82,7 +81,6 @@ class TransactionsViewModel(
 
 }
 
-@ExperimentalCoroutinesApi
 class TransactionsScreen : BaseFragment<TransactionsContract.State, TransactionsContract>(), TransactionConfirmationDialog.Callback {
     override val viewModel: TransactionsContract by viewModel()
     private val picasso: Picasso by inject()

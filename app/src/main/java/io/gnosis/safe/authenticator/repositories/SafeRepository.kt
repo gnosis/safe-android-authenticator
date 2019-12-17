@@ -132,6 +132,7 @@ interface SafeRepository {
         amount: BigInteger
     )
 
+    suspend fun loadAllowance(safe: Solidity.Address, token: Solidity.Address): Allowance
     suspend fun loadAllowances(safe: Solidity.Address): List<Allowance>
     suspend fun loadAllowancesDelegates(safe: Solidity.Address): List<Solidity.Address>
     suspend fun loadModules(safe: Solidity.Address): List<Solidity.Address>
@@ -200,6 +201,21 @@ class SafeRepositoryImpl(
 
     override suspend fun loadModules(safe: Solidity.Address): List<Solidity.Address> =
         jsonRpcApi.performCall(safe, GnosisSafe.GetModules.encode()).let { GnosisSafe.GetModules.decode(it).param0.items }
+
+    override suspend fun loadAllowance(safe: Solidity.Address, token: Solidity.Address): SafeRepository.Allowance {
+        val delegate = loadDeviceId()
+        val result = jsonRpcApi.performCall(ALLOWANCE_MODULE_ADDRESS, data = AllowanceModule.GetTokenAllowance.encode(safe, delegate, token))
+        return AllowanceModule.GetTokenAllowance.decode(result).param0.items.let {
+            SafeRepository.Allowance(
+                token = token,
+                amount = it[0].value,
+                spent = it[1].value,
+                resetPeriod = it[2].value.toLong(),
+                lastSpent = it[3].value.toLong(),
+                nonce = it[4].value
+            )
+        }
+    }
 
     override suspend fun loadAllowances(safe: Solidity.Address): List<SafeRepository.Allowance> {
         val delegate = loadDeviceId()

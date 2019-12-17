@@ -21,10 +21,7 @@ import io.gnosis.safe.authenticator.ui.address.AddressInputContract
 import io.gnosis.safe.authenticator.ui.address.AddressInputViewModel
 import io.gnosis.safe.authenticator.ui.assets.AssetsContract
 import io.gnosis.safe.authenticator.ui.assets.AssetsViewModel
-import io.gnosis.safe.authenticator.ui.instant.InstantTransferListContract
-import io.gnosis.safe.authenticator.ui.instant.InstantTransferListViewModel
-import io.gnosis.safe.authenticator.ui.instant.NewInstantTransferContract
-import io.gnosis.safe.authenticator.ui.instant.NewInstantTransferViewModel
+import io.gnosis.safe.authenticator.ui.instant.*
 import io.gnosis.safe.authenticator.ui.intro.ConnectSafeContract
 import io.gnosis.safe.authenticator.ui.intro.ConnectSafeViewModel
 import io.gnosis.safe.authenticator.ui.settings.*
@@ -33,7 +30,6 @@ import io.gnosis.safe.authenticator.ui.splash.SplashViewModel
 import io.gnosis.safe.authenticator.ui.transactions.*
 import io.gnosis.safe.authenticator.ui.walletconnect.WalletConnectStatusContract
 import io.gnosis.safe.authenticator.ui.walletconnect.WalletConnectStatusViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.android.ext.android.getKoin
@@ -61,7 +57,6 @@ import timber.log.Timber
 import java.io.File
 import java.util.concurrent.TimeUnit
 
-@ExperimentalCoroutinesApi
 class SafeApp : Application() {
     override fun onCreate() {
         super.onCreate()
@@ -194,27 +189,29 @@ class SafeApp : Application() {
         }
     }
 
-    @ExperimentalCoroutinesApi
     private val viewModelModule = module {
         viewModel<SplashContract> { SplashViewModel(get(), get()) }
         viewModel<ConnectSafeContract> { ConnectSafeViewModel(get(), get()) }
         viewModel<AddressInputContract> { AddressInputViewModel(get(), get()) }
-        viewModel<AssetsContract> { AssetsViewModel(get(), get()) }
-        viewModel<TransactionsContract> { TransactionsViewModel(get()) }
-        viewModel<SettingsContract> { SettingsViewModel(get()) }
-        viewModel<NewTransactionContract> { NewTransactionViewModel(get()) }
-        viewModel<SetAllowanceContract> { SetAllowanceViewModel(get()) }
-        viewModel<ManageAllowancesContract> { ManageAllowancesViewModel(get(), get()) }
-        viewModel<NewInstantTransferContract> { NewInstantTransferViewModel(get(), get()) }
-        viewModel<InstantTransferListContract> { InstantTransferListViewModel(get()) }
-        viewModel<WalletConnectStatusContract> { WalletConnectStatusViewModel(get()) }
+        viewModel<AssetsContract> { AssetsViewModel(get(), get(), get()) }
+        viewModel<TransactionsContract> { TransactionsViewModel(get(), get()) }
+        viewModel<SettingsContract> { SettingsViewModel(get(), get()) }
+        viewModel<NewTransactionContract> { NewTransactionViewModel(get(), get()) }
+        viewModel<SetAllowanceContract> { SetAllowanceViewModel(get(), get()) }
+        viewModel<ManageAllowancesContract> { ManageAllowancesViewModel(get(), get(), get()) }
+        viewModel<NewInstantTransferContract> { NewInstantTransferViewModel(get(), get(), get()) }
+        viewModel<NewInstantTransferValueInputContract> { (token: Solidity.Address) ->
+            NewInstantTransferValueInputViewModel(get(), get(), get(), token)
+        }
+        viewModel<InstantTransferListContract> { InstantTransferListViewModel(get(), get()) }
+        viewModel<WalletConnectStatusContract> { WalletConnectStatusViewModel(get(), get()) }
         viewModel<TransactionConfirmationContract> { (
                                                          safe: Solidity.Address,
                                                          transactionHash: String?,
                                                          transaction: SafeRepository.SafeTx,
                                                          executionInfo: SafeRepository.SafeTxExecInfo?
                                                      ) ->
-            TransactionConfirmationViewModel(safe, transactionHash, transaction, executionInfo, get())
+            TransactionConfirmationViewModel(get(), safe, transactionHash, transaction, executionInfo, get())
         }
     }
 }

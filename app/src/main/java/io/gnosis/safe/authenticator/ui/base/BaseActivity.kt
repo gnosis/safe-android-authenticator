@@ -6,7 +6,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
-@ExperimentalCoroutinesApi
 abstract class BaseActivity<S: BaseViewModel.State, T: BaseViewModel<S>>: AppCompatActivity() {
 
     protected abstract val viewModel: T
