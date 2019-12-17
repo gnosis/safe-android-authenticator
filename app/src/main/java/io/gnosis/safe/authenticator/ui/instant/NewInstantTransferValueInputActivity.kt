@@ -30,6 +30,7 @@ import java.math.BigInteger
 
 abstract class NewInstantTransferValueInputContract(context: Context) : BaseViewModel<NewInstantTransferValueInputContract.State>(context) {
 
+    abstract fun reviewInstantTransfer()
     abstract fun checkInput(value: String)
 
     data class State(
@@ -38,6 +39,8 @@ abstract class NewInstantTransferValueInputContract(context: Context) : BaseView
         val selectedAmount: BigInteger?,
         override var viewAction: ViewAction?
     ) : BaseViewModel.State
+
+    data class ShowReviewScreen(val token: Solidity.Address, val amount: BigInteger) : ViewAction
 }
 
 class NewInstantTransferValueInputViewModel(
@@ -100,6 +103,16 @@ class NewInstantTransferValueInputViewModel(
         }
     }
 
+    private var reviewJob: Job? = null
+    override fun reviewInstantTransfer() {
+        if (reviewJob?.isActive == true) return
+        reviewJob = safeLaunch {
+            state.value?.selectedAmount?.let {
+                updateState { copy(viewAction = ShowReviewScreen(token, it)) }
+            }
+        }
+    }
+
     override fun initialState() = State(null, null, null, null)
 
 }
@@ -121,14 +134,28 @@ class NewInstantTransferValueInputActivity : BaseActivity<NewInstantTransferValu
         instant_transfer_value_input_continue_btn.isEnabled = state.selectedAmount != null
     }
 
+    override fun performAction(viewAction: BaseViewModel.ViewAction) {
+        when (viewAction) {
+            is NewInstantTransferValueInputContract.ShowReviewScreen ->
+                startActivity(
+                    NewInstantTransferReviewActivity.createIntent(
+                        this,
+                        viewAction.token,
+                        intent.getStringExtra(EXTRA_SELECTED_TOKEN)?.asEthereumAddress()!!,
+                        viewAction.amount
+                    )
+                )
+            else -> super.performAction(viewAction)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.screen_instant_transfer_value_input)
         // use android.R.id.content to check keyboard
         instant_transfer_value_input_back_btn.setOnClickListener { onBackPressed() }
         instant_transfer_value_input_continue_btn.setOnClickListener {
-            println("next")
-            // TODO start next activity
+            viewModel.reviewInstantTransfer()
         }
         instant_transfer_value_input_amount.setOnEditorActionListener { _, actionId, _ ->
             when (actionId) {

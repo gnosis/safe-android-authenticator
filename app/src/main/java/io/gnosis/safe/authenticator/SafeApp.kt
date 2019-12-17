@@ -55,6 +55,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import timber.log.Timber
 import java.io.File
+import java.math.BigInteger
 import java.util.concurrent.TimeUnit
 
 class SafeApp : Application() {
@@ -202,6 +203,13 @@ class SafeApp : Application() {
         viewModel<NewInstantTransferContract> { NewInstantTransferViewModel(get(), get(), get()) }
         viewModel<NewInstantTransferValueInputContract> { (token: Solidity.Address) ->
             NewInstantTransferValueInputViewModel(get(), get(), get(), token)
+        }
+        viewModel<NewInstantTransferReviewContract> { (
+                                                          token: Solidity.Address,
+                                                          recipient: Solidity.Address,
+                                                          amount: BigInteger
+                                                      ) ->
+            NewInstantTransferReviewViewModel(get(), get(), get(), token, recipient, amount)
         }
         viewModel<InstantTransferListContract> { InstantTransferListViewModel(get(), get()) }
         viewModel<WalletConnectStatusContract> { WalletConnectStatusViewModel(get(), get()) }

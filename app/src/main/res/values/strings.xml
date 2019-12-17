@@ -31,6 +31,7 @@
     <string name="notification_new_transaction_request">New transaction request to review</string>
     <string name="unknown_dapp">Unknown Dapp</string>
     <string name="continue_action">Continue</string>
+    <string name="instant_transfer_review_message">Please review the transaction details.  After submitting, the transaction will be processed immediately.</string>
     <string name="instant_transfer_address_message">Enter the destination address for this transaction. Scan a QR code or paste from clipboard.</string>
     <string name="instant_transfer_value_message">Select the amount of %s you would like to transfer.</string>
     <string name="instant_transfer_value_message_placeholder">Select the amount you would like to transfer.</string>
@@ -40,4 +41,7 @@
     <string name="invalid_amount">Invalid amount entered</string>
     <string name="amount_too_high">Entered amount is too high</string>
     <string name="available_allowance">Available allowance: %s</string>
+    <string name="submit_action">Submit</string>
+    <string name="recipient_label">Recipient</string>
+    <string name="amount_label">Amount</string>
 </resources>

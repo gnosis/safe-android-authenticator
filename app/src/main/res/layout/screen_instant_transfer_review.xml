@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/instant_transfer_review_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <View
+        android:id="@+id/instant_transfer_review_header_bg"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/header_height"
+        android:background="@color/secondaryHeader"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/instant_transfer_review_back_btn"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/selectable_background"
+        android:padding="16dp"
+        android:tint="@color/colorPrimary"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_arrow_back_24dp" />
+
+    <TextView
+        android:id="@+id/instant_transfer_review_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:text="Instant"
+        android:textColor="@color/colorPrimary"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@id/instant_transfer_review_sub_title"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <TextView
+        android:id="@+id/instant_transfer_review_sub_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:text="Transfer"
+        android:textColor="@color/secondaryText"
+        android:textSize="28sp"
+        app:layout_constraintBottom_toBottomOf="@id/instant_transfer_review_header_bg"
+        app:layout_constraintTop_toBottomOf="@id/instant_transfer_review_title"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <TextView
+        android:id="@+id/instant_transfer_review_hint_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:minHeight="104dp"
+        android:paddingStart="24dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="16dp"
+        android:text="@string/instant_transfer_review_message"
+        android:textColor="@color/secondaryText"
+        android:textSize="16sp"
+        app:layout_constraintTop_toBottomOf="@id/instant_transfer_review_header_bg"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <View
+        android:id="@+id/instant_transfer_review_hint_divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/divider"
+        app:layout_constraintTop_toBottomOf="@id/instant_transfer_review_hint_text" />
+
+    <TextView
+        android:id="@+id/instant_transfer_review_amount_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="32dp"
+        android:text="@string/amount_label"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/instant_transfer_review_hint_divider" />
+
+    <ImageView
+        android:id="@+id/instant_transfer_review_amount_icon"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/circle_background"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/instant_transfer_review_amount_label" />
+
+    <TextView
+        android:id="@+id/instant_transfer_review_amount_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="32dp"
+        android:gravity="center_vertical"
+        android:minHeight="32dp"
+        android:textColor="@color/darkText"
+        app:layout_constraintBottom_toBottomOf="@id/instant_transfer_review_amount_icon"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/instant_transfer_review_amount_icon"
+        app:layout_constraintTop_toTopOf="@id/instant_transfer_review_amount_icon"
+        tools:text="1,001.4526743 DAI" />
+
+    <TextView
+        android:id="@+id/instant_transfer_review_recipient_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="32dp"
+        android:text="@string/recipient_label"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/instant_transfer_review_amount_text" />
+
+    <pm.gnosis.blockies.BlockiesImageView
+        android:id="@+id/instant_transfer_review_recipient_ident"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/circle_background"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/instant_transfer_review_recipient_label" />
+
+    <TextView
+        android:id="@+id/instant_transfer_review_recipient_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="32dp"
+        android:fontFamily="monospace"
+        android:gravity="center_vertical"
+        android:lines="2"
+        android:minHeight="32dp"
+        android:textColor="@color/darkText"
+        app:layout_constraintBottom_toBottomOf="@id/instant_transfer_review_recipient_ident"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/instant_transfer_review_recipient_ident"
+        app:layout_constraintTop_toTopOf="@id/instant_transfer_review_recipient_ident"
+        tools:text="0x30c6a0a3AB68dC4c9e3
+8d7B00F718d32240EFa0f" />
+
+    <TextView
+        android:id="@+id/instant_transfer_review_continue_btn"
+        style="@style/PrimaryButton"
+        android:layout_width="wrap_content"
+        android:layout_margin="8dp"
+        android:text="@string/submit_action"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/instant_transfer_review_steps"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ProgressBar
+        android:id="@+id/instant_transfer_review_progress"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_margin="8dp"
+        app:layout_constraintBottom_toTopOf="@id/instant_transfer_review_steps"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <io.gnosis.safe.authenticator.ui.views.CirclePageIndicator
+        android:id="@+id/instant_transfer_review_steps"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        app:layout_constraintBottom_toBottomOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>
