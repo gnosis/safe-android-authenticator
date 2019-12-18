@@ -68,5 +68,15 @@ data class ServiceTransactionRequest(
 @JsonClass(generateAdapter = true)
 data class ServiceBalance(
     @Json(name = "tokenAddress") val tokenAddress: Solidity.Address?,
-    @DecimalNumber @Json(name = "balance") val balance: BigInteger
-)
+    @Json(name = "token") val token: ServiceTokenMeta?,
+    @DecimalNumber @Json(name = "balance") val balance: BigInteger,
+    @Json(name = "balanceUsd") val balanceUsd: String?
+) {
+    @JsonClass(generateAdapter = true)
+    data class ServiceTokenMeta(
+        @Json(name = "decimals") val decimals: Int,
+        @Json(name = "symbol") val symbol: String,
+        @Json(name = "name") val name: String,
+        @Json(name = "logoUri") val logoUri: String?
+    )
+}

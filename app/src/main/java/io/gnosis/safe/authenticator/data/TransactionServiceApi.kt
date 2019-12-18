@@ -10,7 +10,7 @@ import retrofit2.http.*
 
 interface TransactionServiceApi {
 
-    @GET("v1/safes/{address}/balances/")
+    @GET("v1/safes/{address}/balances/usd/")
     suspend fun loadBalances(@Path("address") address: String): List<ServiceBalance>
 
     @GET("v1/safes/{address}/transactions/")

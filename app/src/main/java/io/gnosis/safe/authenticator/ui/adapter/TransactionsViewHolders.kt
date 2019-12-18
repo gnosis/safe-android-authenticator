@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import com.squareup.picasso.Picasso
+import io.gnosis.safe.authenticator.BuildConfig
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.utils.setTransactionIcon
@@ -13,6 +14,7 @@ import io.gnosis.safe.authenticator.utils.shiftedString
 import io.gnosis.safe.authenticator.utils.shortChecksumString
 import kotlinx.android.synthetic.main.item_pending_tx.view.*
 import pm.gnosis.svalinn.common.utils.getColorCompat
+import pm.gnosis.svalinn.common.utils.openUrl
 import pm.gnosis.svalinn.common.utils.visible
 import pm.gnosis.utils.removeHexPrefix
 
@@ -110,6 +112,9 @@ class InstantTransferViewHolder(
 ) : ListEntryViewHolder(itemView) {
     override fun bind(entry: ListEntry) {
         if (entry !is InstantTransferMetaEntry) return
+        itemView.setOnClickListener {
+            itemView.context.openUrl(BuildConfig.BLOCK_EXPLORER_TX.format(entry.info.txHash))
+        }
         itemView.tx_info_target.setAddress(entry.info.to)
         // TODO: move to viewmodel
         itemView.tx_info_target_address.text = entry.info.to.shortChecksumString()

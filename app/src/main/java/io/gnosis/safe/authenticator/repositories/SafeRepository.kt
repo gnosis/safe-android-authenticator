@@ -28,6 +28,7 @@ import pm.gnosis.svalinn.common.PreferencesManager
 import pm.gnosis.svalinn.common.utils.edit
 import pm.gnosis.svalinn.security.EncryptionManager
 import pm.gnosis.utils.*
+import java.math.BigDecimal
 import java.math.BigInteger
 import java.nio.charset.Charset
 
@@ -137,7 +138,13 @@ interface SafeRepository {
     suspend fun loadAllowancesDelegates(safe: Solidity.Address): List<Solidity.Address>
     suspend fun loadModules(safe: Solidity.Address): List<Solidity.Address>
 
-    suspend fun loadTokenBalances(safe: Solidity.Address): List<Pair<Solidity.Address, BigInteger>>
+    suspend fun loadTokenBalances(safe: Solidity.Address): List<Balance>
+
+    data class Balance(
+        val tokenInfo: TokensRepository.TokenInfo,
+        val balance: BigInteger,
+        val usdBalance: BigDecimal?
+    )
 
     companion object {
         val ALLOWANCE_MODULE_ADDRESS = BuildConfig.ALLOWANCE_MODULE.asEthereumAddress()!!
@@ -337,9 +344,19 @@ class SafeRepositoryImpl(
         loggedTry { instantTransferDao.insert(InstantTransferDb(response.hash, allowance.token, to, amount, allowance.nonce)) }
     }
 
-    override suspend fun loadTokenBalances(safe: Solidity.Address): List<Pair<Solidity.Address, BigInteger>> =
+    override suspend fun loadTokenBalances(safe: Solidity.Address): List<SafeRepository.Balance> =
         transactionServiceApi.loadBalances(safe.asEthereumAddressChecksumString()).map {
-            (it.tokenAddress ?: Solidity.Address(BigInteger.ZERO)) to it.balance
+            val tokenAddress = it.tokenAddress ?: TokensRepository.ETH_ADDRESS
+            val tokenInfo = it.token?.let { meta ->
+                tokensRepository.cacheTokenInfo(TokensRepository.TokenInfo(
+                    tokenAddress,
+                    meta.symbol,
+                    meta.decimals,
+                    meta.name,
+                    meta.logoUri ?: "https://gnosis-safe-token-logos.s3.amazonaws.com/${tokenAddress.asEthereumAddressChecksumString()}.png"
+                ))
+            } ?: TokensRepository.ETH_TOKEN_INFO
+            SafeRepository.Balance(tokenInfo, it.balance, it.balanceUsd?.toBigDecimal())
         }
 
     override suspend fun loadSafeInfo(safe: Solidity.Address): SafeRepository.SafeInfo {

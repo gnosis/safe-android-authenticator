@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.view.isVisible
-import androidx.lifecycle.liveData
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
@@ -20,16 +19,18 @@ import io.gnosis.safe.authenticator.repositories.TokensRepository
 import io.gnosis.safe.authenticator.ui.base.BaseFragment
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
-import io.gnosis.safe.authenticator.ui.instant.NewInstantTransferActivity
 import io.gnosis.safe.authenticator.ui.instant.NewInstantTransferAddressInputActivity
-import io.gnosis.safe.authenticator.utils.*
+import io.gnosis.safe.authenticator.utils.copyToClipboard
+import io.gnosis.safe.authenticator.utils.generateQrCode
+import io.gnosis.safe.authenticator.utils.setTransactionIcon
+import io.gnosis.safe.authenticator.utils.shiftedString
 import kotlinx.android.synthetic.main.item_token_balance.view.*
 import kotlinx.android.synthetic.main.screen_assets.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
 import pm.gnosis.model.Solidity
+import java.math.BigDecimal
 import java.math.BigInteger
 
 abstract class AssetsContract(context: Context) : LoadingViewModel<AssetsContract.State>(context) {
@@ -46,9 +47,9 @@ abstract class AssetsContract(context: Context) : LoadingViewModel<AssetsContrac
     ) : BaseViewModel.State
 
     data class TokenBalance(
-        val address: Solidity.Address,
+        val info: TokensRepository.TokenInfo,
         val balance: BigInteger,
-        val info: TokensRepository.TokenInfo?
+        val usdBalance: BigDecimal?
     )
 }
 
@@ -76,27 +77,31 @@ class AssetsViewModel(
             val safeTokens = safeRepository.loadTokenBalances(safe)
             val balances = if (showOnlyAllowance) {
                 val allowances = safeRepository.loadAllowances(safe)
-                safeTokens.mapNotNull { (address, balance) ->
-                    val allowance = allowances.find { it.token == address } ?: return@mapNotNull null
+                safeTokens.mapNotNull { balance ->
+                    val conversion =
+                        (balance.usdBalance ?: BigDecimal.ZERO) * BigDecimal.TEN.pow(balance.tokenInfo.decimals) / balance.balance.toBigDecimal()
+                    val allowance = allowances.find { it.token == balance.tokenInfo.address } ?: return@mapNotNull null
                     val remaining = allowance.amount - allowance.spent
                     if (remaining <= BigInteger.ZERO) return@mapNotNull null
-                    address to balance.min(remaining)
+                    val available = balance.balance.min(remaining)
+                    val availableUsd = conversion * available.toBigDecimal() / BigDecimal.TEN.pow(balance.tokenInfo.decimals)
+                    TokenBalance(balance.tokenInfo, available, checkUsdBalance(availableUsd))
                 }
             } else {
-                safeTokens
-            }
-            val balancesWithTokenInfo = balances.map { (address, balance) ->
-                val info = nullOnThrow { tokensRepository.loadTokenInfo(address) }
-                TokenBalance(address, balance, info)
+                safeTokens.map {
+                    TokenBalance(it.tokenInfo, it.balance, checkUsdBalance(it.usdBalance))
+                }
             }
             val deviceIdString = safeRepository.loadDeviceId().asEthereumAddressChecksumString()
             val qrCode =
-                if (balancesWithTokenInfo.isEmpty())
+                if (balances.isEmpty())
                     deviceIdString.generateQrCode(512, 512)
                 else null
-            updateState { copy(loading = false, safe = safe, assets = balancesWithTokenInfo, qrCode = qrCode, deviceIdString = deviceIdString) }
+            updateState { copy(loading = false, safe = safe, assets = balances, qrCode = qrCode, deviceIdString = deviceIdString) }
         }
     }
+
+    private fun checkUsdBalance(usdBalance: BigDecimal?) = usdBalance?.let { if (it > BigDecimal.ZERO) usdBalance else null }
 
     override fun onLoadingError(state: State, e: Throwable) = state.copy(loading = false)
 
@@ -162,18 +167,22 @@ class AssetsScreen : BaseFragment<AssetsContract.State, AssetsContract>() {
         fun bind(item: AssetsContract.TokenBalance) {
             if (showOnlyAllowance) {
                 itemView.setOnClickListener {
-                    startActivity(NewInstantTransferAddressInputActivity.createIntent(context!!, item.address))
+                    startActivity(NewInstantTransferAddressInputActivity.createIntent(context!!, item.info.address))
                 }
             }
-            itemView.token_balance_token.text = item.info?.symbol ?: item.address.asEthereumAddressChecksumString().substring(0, 6)
-            itemView.token_balance_amount.text = item.balance.shiftedString(item.info?.decimals ?: 0)
-            itemView.token_balance_icon.setTransactionIcon(picasso, item.info?.icon)
+            itemView.token_balance_token.text = item.info.symbol
+            itemView.token_balance_amount.text = item.balance.shiftedString(item.info.decimals)
+            itemView.token_balance_icon.setTransactionIcon(picasso, item.info.icon)
+            itemView.token_balance_usd_amount.isVisible = item.usdBalance != null
+            item.usdBalance?.let {
+                itemView.token_balance_usd_amount.text = "$${it.toPlainString()}"
+            }
         }
     }
 
     class DiffCallback : DiffUtil.ItemCallback<AssetsContract.TokenBalance>() {
         override fun areItemsTheSame(oldItem: AssetsContract.TokenBalance, newItem: AssetsContract.TokenBalance) =
-            oldItem.address == newItem.address
+            oldItem.info.address == newItem.info.address
 
         override fun areContentsTheSame(oldItem: AssetsContract.TokenBalance, newItem: AssetsContract.TokenBalance) =
             oldItem == newItem

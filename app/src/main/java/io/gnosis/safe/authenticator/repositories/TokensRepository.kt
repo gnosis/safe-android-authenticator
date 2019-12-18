@@ -3,6 +3,7 @@ package io.gnosis.safe.authenticator.repositories
 import io.gnosis.safe.authenticator.data.RelayServiceApi
 import io.gnosis.safe.authenticator.db.TokenInfoDao
 import io.gnosis.safe.authenticator.db.TokenInfoDb
+import io.gnosis.safe.authenticator.repositories.TokensRepository.Companion.ETH_ADDRESS
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -14,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 interface TokensRepository {
 
+    suspend fun cacheTokenInfo(info: TokenInfo): TokenInfo
     suspend fun loadTokenInfo(token: Solidity.Address): TokenInfo
 
     data class TokenInfo(
@@ -38,8 +40,16 @@ class GnosisServiceTokenRepository(
     private val lastInit = System.currentTimeMillis()
     private val pendingTokenInfo = ConcurrentHashMap<Solidity.Address, Deferred<TokenInfoDb>>()
 
+    override suspend fun cacheTokenInfo(info: TokensRepository.TokenInfo): TokensRepository.TokenInfo {
+        if (info.address == ETH_ADDRESS) return TokensRepository.ETH_TOKEN_INFO
+        TokenInfoDb(info.address, info.symbol, info.name, info.decimals, info.icon ?: "", System.currentTimeMillis()).apply {
+            tokenInfoDao.insert(this)
+        }
+        return info
+    }
+
     override suspend fun loadTokenInfo(token: Solidity.Address): TokensRepository.TokenInfo {
-        if (token == TokensRepository.ETH_ADDRESS) return TokensRepository.ETH_TOKEN_INFO
+        if (token == ETH_ADDRESS) return TokensRepository.ETH_TOKEN_INFO
         val localToken = tokenInfoDao.load(token)
         val tokenInfo = if (shouldLoadRemote(localToken)) loadRemoteInfoAsync(token, localToken).await() else localToken!!
         return tokenInfo.toLocal()
