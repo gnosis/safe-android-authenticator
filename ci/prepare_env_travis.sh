@@ -10,5 +10,5 @@ export APP_VERSION_NAME=${description:1}
 export APP_RELEASE_NOTES=$TRAVIS_COMMIT_MESSAGE
 
 curl -sL firebase.tools | bash
-firebase apps:sdkconfig --project $FIREBASE_PROJECT ANDROID $FIREBASE_APP_ID > app/google-services.json
-head -7 app/google-services.json
+rm -f app/google-services.json
+firebase apps:sdkconfig --project $FIREBASE_PROJECT ANDROID $FIREBASE_APP_ID -o app/google-services.json
