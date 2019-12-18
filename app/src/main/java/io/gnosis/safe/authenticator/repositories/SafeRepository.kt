@@ -1,6 +1,8 @@
 package io.gnosis.safe.authenticator.repositories
 
 import android.content.Context
+import android.os.Parcel
+import android.os.Parcelable
 import io.gnosis.safe.authenticator.*
 import io.gnosis.safe.authenticator.BuildConfig
 import io.gnosis.safe.authenticator.R
@@ -15,6 +17,9 @@ import io.gnosis.safe.authenticator.db.InstantTransferDb
 import io.gnosis.safe.authenticator.repositories.SafeRepository.Companion.ALLOWANCE_MODULE_ADDRESS
 import io.gnosis.safe.authenticator.utils.*
 import io.gnosis.safe.authenticator.utils.nullOnThrow
+import kotlinx.android.parcel.IgnoredOnParcel
+import kotlinx.android.parcel.Parcelize
+import kotlinx.android.parcel.TypeParceler
 import kotlinx.coroutines.rx2.await
 import okio.ByteString
 import pm.gnosis.crypto.ECDSASignature
@@ -43,10 +48,19 @@ interface SafeRepository {
         overrideNonce: BigInteger? = null
     ): SafeTxExecInfo
 
+    suspend fun calculateSafeTransactionHash(safe: Solidity.Address, transaction: SafeTx, execInfo: SafeTxExecInfo): String
+
     suspend fun confirmSafeTransaction(
         safe: Solidity.Address,
         transaction: SafeTx,
         execInfo: SafeTxExecInfo
+    ): String
+
+    suspend fun submitOnChainConfirmationTransactionHash(
+        safe: Solidity.Address,
+        transaction: SafeTx,
+        execInfo: SafeTxExecInfo,
+        txHash: String
     ): String
 
     suspend fun loadPendingTransactions(safe: Solidity.Address): List<ServiceSafeTx>
@@ -68,12 +82,14 @@ interface SafeRepository {
         val txHash: String?
     )
 
+    @Parcelize
+    @TypeParceler<Solidity.Address, SolidityAddressParceler>
     data class SafeTx(
         val to: Solidity.Address,
         val value: BigInteger,
         val data: String,
         val operation: Operation
-    ) {
+    ) : Parcelable {
 
         enum class Operation(val id: Int) {
             CALL(0),
@@ -81,6 +97,8 @@ interface SafeRepository {
         }
     }
 
+    @Parcelize
+    @TypeParceler<Solidity.Address, SolidityAddressParceler>
     data class SafeTxExecInfo(
         val baseGas: BigInteger,
         val txGas: BigInteger,
@@ -88,7 +106,8 @@ interface SafeRepository {
         val gasToken: Solidity.Address,
         val refundReceiver: Solidity.Address,
         val nonce: BigInteger
-    ) {
+    ) : Parcelable {
+        @IgnoredOnParcel
         val fees by lazy { (baseGas + txGas) * gasPrice }
     }
 
@@ -348,13 +367,15 @@ class SafeRepositoryImpl(
         transactionServiceApi.loadBalances(safe.asEthereumAddressChecksumString()).map {
             val tokenAddress = it.tokenAddress ?: TokensRepository.ETH_ADDRESS
             val tokenInfo = it.token?.let { meta ->
-                tokensRepository.cacheTokenInfo(TokensRepository.TokenInfo(
-                    tokenAddress,
-                    meta.symbol,
-                    meta.decimals,
-                    meta.name,
-                    meta.logoUri ?: "https://gnosis-safe-token-logos.s3.amazonaws.com/${tokenAddress.asEthereumAddressChecksumString()}.png"
-                ))
+                tokensRepository.cacheTokenInfo(
+                    TokensRepository.TokenInfo(
+                        tokenAddress,
+                        meta.symbol,
+                        meta.decimals,
+                        meta.name,
+                        meta.logoUri ?: "https://gnosis-safe-token-logos.s3.amazonaws.com/${tokenAddress.asEthereumAddressChecksumString()}.png"
+                    )
+                )
             } ?: TokensRepository.ETH_TOKEN_INFO
             SafeRepository.Balance(tokenInfo, it.balance, it.balanceUsd?.toBigDecimal())
         }
@@ -533,6 +554,23 @@ class SafeRepositoryImpl(
         return response.removePrefix(ESTIMATE_RESPONSE_PREFIX).hexAsBigInteger() + BigInteger.valueOf(10000)
     }
 
+    override suspend fun calculateSafeTransactionHash(
+        safe: Solidity.Address,
+        transaction: SafeRepository.SafeTx,
+        execInfo: SafeRepository.SafeTxExecInfo
+    ) = calculateHash(
+        safe,
+        transaction.to,
+        transaction.value,
+        transaction.data,
+        transaction.operation,
+        execInfo.txGas,
+        execInfo.baseGas,
+        execInfo.gasPrice,
+        execInfo.gasToken,
+        execInfo.nonce
+    ).toHexString()
+
     override suspend fun confirmSafeTransaction(
         safe: Solidity.Address,
         transaction: SafeRepository.SafeTx,
@@ -574,6 +612,35 @@ class SafeRepositoryImpl(
         )
         transactionServiceApi.confirmTransaction(safe.asEthereumAddressChecksumString(), confirmation)
         return hash.toHexString()
+    }
+
+    override suspend fun submitOnChainConfirmationTransactionHash(
+        safe: Solidity.Address,
+        transaction: SafeRepository.SafeTx,
+        execInfo: SafeRepository.SafeTxExecInfo,
+        txHash: String
+    ): String {
+        // Dirty hack
+        val sender = loadSafeInfo(safe).owners.first()
+        val safeTxHash = calculateSafeTransactionHash(safe, transaction, execInfo)
+        val confirmation = ServiceTransactionRequest(
+            to = transaction.to.asEthereumAddressChecksumString(),
+            value = transaction.value.asDecimalString(),
+            data = transaction.data,
+            operation = transaction.operation.id,
+            gasToken = execInfo.gasToken.asEthereumAddressChecksumString(),
+            safeTxGas = execInfo.txGas.asDecimalString(),
+            baseGas = execInfo.baseGas.asDecimalString(),
+            gasPrice = execInfo.gasPrice.asDecimalString(),
+            refundReceiver = execInfo.refundReceiver.asEthereumAddressChecksumString(),
+            nonce = execInfo.nonce.asDecimalString(),
+            safeTxHash = safeTxHash,
+            sender = sender.asEthereumAddressChecksumString(),
+            confirmationType = ServiceTransactionRequest.CONFIRMATION,
+            signature = null
+        )
+        transactionServiceApi.confirmTransaction(safe.asEthereumAddressChecksumString(), confirmation)
+        return safeTxHash
     }
 
     private fun ECDSASignature.toSignatureString() =

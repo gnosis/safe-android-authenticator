@@ -135,9 +135,9 @@ class NewInstantTransferValueInputActivity : BaseActivity<NewInstantTransferValu
         instant_transfer_value_input_continue_btn.isEnabled = state.selectedAmount != null
     }
 
-    override fun performAction(viewAction: BaseViewModel.ViewAction) {
-        when (viewAction) {
-            is NewInstantTransferValueInputContract.ShowReviewScreen ->
+    override fun performAction(viewAction: BaseViewModel.ViewAction): Boolean {
+        return when (viewAction) {
+            is NewInstantTransferValueInputContract.ShowReviewScreen -> {
                 startActivity(
                     NewInstantTransferReviewActivity.createIntent(
                         this,
@@ -146,6 +146,8 @@ class NewInstantTransferValueInputActivity : BaseActivity<NewInstantTransferValu
                         viewAction.amount
                     )
                 )
+                true
+            }
             else -> super.performAction(viewAction)
         }
     }

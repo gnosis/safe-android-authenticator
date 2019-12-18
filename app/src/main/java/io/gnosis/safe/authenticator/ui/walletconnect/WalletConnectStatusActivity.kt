@@ -97,11 +97,12 @@ class WalletConnectStatusViewModel(
 
 }
 
-class WalletConnectStatusActivity : BaseActivity<WalletConnectStatusContract.State, WalletConnectStatusContract>() {
+class WalletConnectStatusActivity : BaseActivity<WalletConnectStatusContract.State, WalletConnectStatusContract>(),
+    TransactionConfirmationDialog.Callback {
     private val picasso: Picasso by inject()
     override val viewModel: WalletConnectStatusContract by viewModel()
 
-    private var currentConfirmationCallback: TransactionConfirmationDialog.Callback? = null
+    private var currentReferenceId: Long? = null
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
@@ -124,6 +125,14 @@ class WalletConnectStatusActivity : BaseActivity<WalletConnectStatusContract.Sta
         intent?.handleTxExtra()
     }
 
+    override fun onConfirmed(hash: String) {
+        viewModel.confirmTransaction(currentReferenceId, hash)
+    }
+
+    override fun onRejected() {
+        viewModel.rejectTransaction(currentReferenceId)
+    }
+
     private fun Intent.handleTxExtra() {
         val safe = getStringExtra(EXTRA_TRANSACTION_SAFE)?.asEthereumAddress() ?: return
         val to = getStringExtra(EXTRA_TRANSACTION_TO)?.asEthereumAddress() ?: return
@@ -136,21 +145,17 @@ class WalletConnectStatusActivity : BaseActivity<WalletConnectStatusContract.Sta
         intent.removeExtra(EXTRA_TRANSACTION_VALUE)
         intent.removeExtra(EXTRA_TRANSACTION_DATA)
         intent.removeExtra(EXTRA_TRANSACTION_REFERENCE_ID)
-        currentConfirmationCallback = object : TransactionConfirmationDialog.Callback {
-            override fun onConfirmed(hash: String) {
-                viewModel.confirmTransaction(referenceId, hash)
-            }
-
-            override fun onRejected() {
-                viewModel.rejectTransaction(referenceId)
-            }
+        currentReferenceId?.let {
+            currentReferenceId = null
+            viewModel.rejectTransaction(it)
         }
-        TransactionConfirmationDialog(
-            this@WalletConnectStatusActivity,
+        currentReferenceId = referenceId
+        TransactionConfirmationDialog.show(
+            supportFragmentManager,
             safe,
             null,
-            tx,
-            callback = currentConfirmationCallback).show()
+            tx
+        )
     }
 
     override fun updateState(state: WalletConnectStatusContract.State) {
