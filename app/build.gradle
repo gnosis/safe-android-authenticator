@@ -58,6 +58,7 @@ android {
             versionNameSuffix "-debug"
             minifyEnabled false
             firebaseAppDistribution {
+                releaseNotes=getKey("APP_RELEASE_NOTES")
                 groups=getKey("FIREBASE_GROUP")
             }
         }
@@ -78,6 +79,7 @@ android {
             buildConfigField javaTypes.STRING, "ALLOWANCE_MODULE", asString(getKey("ALLOWANCE_MODULE", "0x1DB1a2063504D15D36e9506A192ab7BBb17dbb2A"))
 
             firebaseAppDistribution {
+                releaseNotes=getKey("APP_RELEASE_NOTES")
                 groups=getKey("FIREBASE_GROUP")
             }
         }
