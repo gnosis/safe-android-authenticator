@@ -25,9 +25,6 @@ before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
 
-before_install:
-  - yes | sdkmanager --licenses
-
 script:
   - . ./ci/prepare_env_travis.sh
   - ./ci/upload_firebase_versions.sh
