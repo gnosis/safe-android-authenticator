@@ -348,13 +348,13 @@ class SafeRepositoryImpl(
         transactionServiceApi.loadBalances(safe.asEthereumAddressChecksumString()).map {
             val tokenAddress = it.tokenAddress ?: TokensRepository.ETH_ADDRESS
             val tokenInfo = it.token?.let { meta ->
-                TokensRepository.TokenInfo(
+                tokensRepository.cacheTokenInfo(TokensRepository.TokenInfo(
                     tokenAddress,
                     meta.symbol,
                     meta.decimals,
                     meta.name,
                     meta.logoUri ?: "https://gnosis-safe-token-logos.s3.amazonaws.com/${tokenAddress.asEthereumAddressChecksumString()}.png"
-                )
+                ))
             } ?: TokensRepository.ETH_TOKEN_INFO
             SafeRepository.Balance(tokenInfo, it.balance, it.balanceUsd?.toBigDecimal())
         }

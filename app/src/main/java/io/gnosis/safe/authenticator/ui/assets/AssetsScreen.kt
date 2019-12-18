@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.view.isVisible
-import androidx.lifecycle.liveData
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
@@ -20,12 +19,13 @@ import io.gnosis.safe.authenticator.repositories.TokensRepository
 import io.gnosis.safe.authenticator.ui.base.BaseFragment
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
-import io.gnosis.safe.authenticator.ui.instant.NewInstantTransferActivity
 import io.gnosis.safe.authenticator.ui.instant.NewInstantTransferAddressInputActivity
-import io.gnosis.safe.authenticator.utils.*
+import io.gnosis.safe.authenticator.utils.copyToClipboard
+import io.gnosis.safe.authenticator.utils.generateQrCode
+import io.gnosis.safe.authenticator.utils.setTransactionIcon
+import io.gnosis.safe.authenticator.utils.shiftedString
 import kotlinx.android.synthetic.main.item_token_balance.view.*
 import kotlinx.android.synthetic.main.screen_assets.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
@@ -78,14 +78,18 @@ class AssetsViewModel(
             val balances = if (showOnlyAllowance) {
                 val allowances = safeRepository.loadAllowances(safe)
                 safeTokens.mapNotNull { balance ->
+                    val conversion =
+                        (balance.usdBalance ?: BigDecimal.ZERO) * BigDecimal.TEN.pow(balance.tokenInfo.decimals) / balance.balance.toBigDecimal()
                     val allowance = allowances.find { it.token == balance.tokenInfo.address } ?: return@mapNotNull null
                     val remaining = allowance.amount - allowance.spent
                     if (remaining <= BigInteger.ZERO) return@mapNotNull null
-                    TokenBalance(balance.tokenInfo, balance.balance, null)
+                    val available = balance.balance.min(remaining)
+                    val availableUsd = conversion * available.toBigDecimal() / BigDecimal.TEN.pow(balance.tokenInfo.decimals)
+                    TokenBalance(balance.tokenInfo, available, checkUsdBalance(availableUsd))
                 }
             } else {
                 safeTokens.map {
-                    TokenBalance(it.tokenInfo, it.balance, it.usdBalance)
+                    TokenBalance(it.tokenInfo, it.balance, checkUsdBalance(it.usdBalance))
                 }
             }
             val deviceIdString = safeRepository.loadDeviceId().asEthereumAddressChecksumString()
@@ -96,6 +100,8 @@ class AssetsViewModel(
             updateState { copy(loading = false, safe = safe, assets = balances, qrCode = qrCode, deviceIdString = deviceIdString) }
         }
     }
+
+    private fun checkUsdBalance(usdBalance: BigDecimal?) = usdBalance?.let { if (it > BigDecimal.ZERO) usdBalance else null }
 
     override fun onLoadingError(state: State, e: Throwable) = state.copy(loading = false)
 

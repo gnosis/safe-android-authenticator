@@ -142,7 +142,7 @@ class NewInstantTransferValueInputActivity : BaseActivity<NewInstantTransferValu
                     NewInstantTransferReviewActivity.createIntent(
                         this,
                         viewAction.token,
-                        intent.getStringExtra(EXTRA_SELECTED_TOKEN)?.asEthereumAddress()!!,
+                        intent.getStringExtra(EXTRA_SELECTED_ADDRESS)?.asEthereumAddress()!!,
                         viewAction.amount
                     )
                 )

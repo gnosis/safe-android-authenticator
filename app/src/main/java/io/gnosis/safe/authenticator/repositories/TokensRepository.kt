@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 interface TokensRepository {
 
-    suspend fun cacheTokenInfo(info: TokenInfo)
+    suspend fun cacheTokenInfo(info: TokenInfo): TokenInfo
     suspend fun loadTokenInfo(token: Solidity.Address): TokenInfo
 
     data class TokenInfo(
@@ -40,11 +40,12 @@ class GnosisServiceTokenRepository(
     private val lastInit = System.currentTimeMillis()
     private val pendingTokenInfo = ConcurrentHashMap<Solidity.Address, Deferred<TokenInfoDb>>()
 
-    override suspend fun cacheTokenInfo(info: TokensRepository.TokenInfo) {
-        if (info.address == ETH_ADDRESS) return
+    override suspend fun cacheTokenInfo(info: TokensRepository.TokenInfo): TokensRepository.TokenInfo {
+        if (info.address == ETH_ADDRESS) return TokensRepository.ETH_TOKEN_INFO
         TokenInfoDb(info.address, info.symbol, info.name, info.decimals, info.icon ?: "", System.currentTimeMillis()).apply {
             tokenInfoDao.insert(this)
         }
+        return info
     }
 
     override suspend fun loadTokenInfo(token: Solidity.Address): TokensRepository.TokenInfo {
