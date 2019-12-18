@@ -14,8 +14,8 @@ android {
         applicationId "io.gnosis.safe.authenticator"
         minSdkVersion 24
         targetSdkVersion 29
-        versionCode 2
-        versionName "0.1.0 - Praecox"
+        versionCode getInt("APP_VERSION_CODE", 2)
+        versionName getKey("APP_VERSION_NAME", "0.1.0 - Praecox")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField javaTypes.LONG, "BLOCKCHAIN_CHAIN_ID", getKey("BLOCKCHAIN_CHAIN_ID", "4")
@@ -58,7 +58,7 @@ android {
             versionNameSuffix "-debug"
             minifyEnabled false
             firebaseAppDistribution {
-                groups="gnosis"
+                groups=getKey("FIREBASE_GROUP")
             }
         }
         mainnet {
@@ -78,7 +78,7 @@ android {
             buildConfigField javaTypes.STRING, "ALLOWANCE_MODULE", asString(getKey("ALLOWANCE_MODULE", "0x1DB1a2063504D15D36e9506A192ab7BBb17dbb2A"))
 
             firebaseAppDistribution {
-                groups="gnosis"
+                groups=getKey("FIREBASE_GROUP")
             }
         }
         release {

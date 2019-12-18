@@ -1,0 +1,31 @@
+language: android
+dist: precise
+
+android:
+  components:
+    - tools
+    - platform-tools
+    - tools
+
+    # The BuildTools version used by your project
+    - build-tools-29.0.2
+
+    # The SDK version used to compile your project
+    - android-29
+
+    - extra-android-m2repository
+
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+    - $HOME/.android/build-cache
+
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+
+script:
+  - pwd
+  - . ./ci/prepare_env_travis.sh
+  - ./ci/upload_firebase_versions.sh
