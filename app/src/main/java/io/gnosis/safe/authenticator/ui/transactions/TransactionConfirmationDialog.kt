@@ -315,7 +315,7 @@ class TransactionConfirmationDialog : BottomSheetDialogFragment() {
         private const val ARG_TX_HASH = "argument.string.transaction_hash"
         private const val ARG_TX = "argument.parcelable.transaction"
         private const val ARG_EXEC_INFO = "argument.parcelable.execution_info"
-        private const val A RG_REJECT_ON_DISMISS = "argument.boolean.reject_on_dismiss"
+        private const val ARG_REJECT_ON_DISMISS = "argument.boolean.reject_on_dismiss"
         fun show(
             fragmentManager: FragmentManager,
             safe: Solidity.Address,
