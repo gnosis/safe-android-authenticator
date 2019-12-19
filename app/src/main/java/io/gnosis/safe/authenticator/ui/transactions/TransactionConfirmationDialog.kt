@@ -10,9 +10,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.view.isVisible
-import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.*
+import androidx.lifecycle.Observer
+import androidx.lifecycle.viewModelScope
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_COLLAPSED
 import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
@@ -30,22 +30,13 @@ import io.gnosis.safe.authenticator.utils.setTransactionIcon
 import io.gnosis.safe.authenticator.utils.shiftedString
 import kotlinx.android.synthetic.main.screen_confirm_tx.*
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
-import org.koin.android.ext.android.getKoin
 import org.koin.android.ext.android.inject
-import org.koin.androidx.viewmodel.ViewModelParameters
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.koin.androidx.viewmodel.getViewModel
 import org.koin.core.parameter.parametersOf
 import pm.gnosis.model.Solidity
 import pm.gnosis.svalinn.common.utils.getColorCompat
-import pm.gnosis.svalinn.common.utils.openUrl
-import pm.gnosis.utils.addHexPrefix
-import pm.gnosis.utils.asEthereumAddress
-import pm.gnosis.utils.asEthereumAddressString
-import pm.gnosis.utils.hexToByteArray
-import java.lang.Exception
+import pm.gnosis.utils.*
 import java.lang.ref.WeakReference
 import java.math.BigInteger
 
@@ -144,8 +135,8 @@ class TransactionConfirmationViewModel(
                         // TODO: how to get the address of the other wallet
                         val signatureString = transactionInfo?.confirmations
                             ?.sortedBy { it.first.value }
-                            ?.joinToString { (owner, signature) ->
-                                signature ?: owner.encode() + Solidity.UInt256(BigInteger.ZERO).encode() + "01"
+                            ?.joinToString(separator = "") { (owner, signature) ->
+                                signature?.removeHexPrefix() ?: (owner.encode() + Solidity.UInt256(BigInteger.ZERO).encode() + "01")
                             } ?: ""
                         val executeData = GnosisSafe.ExecTransaction.encode(
                             transaction.to,
@@ -324,7 +315,7 @@ class TransactionConfirmationDialog : BottomSheetDialogFragment() {
         private const val ARG_TX_HASH = "argument.string.transaction_hash"
         private const val ARG_TX = "argument.parcelable.transaction"
         private const val ARG_EXEC_INFO = "argument.parcelable.execution_info"
-        private const val ARG_REJECT_ON_DISMISS = "argument.boolean.reject_on_dismiss"
+        private const val A RG_REJECT_ON_DISMISS = "argument.boolean.reject_on_dismiss"
         fun show(
             fragmentManager: FragmentManager,
             safe: Solidity.Address,
