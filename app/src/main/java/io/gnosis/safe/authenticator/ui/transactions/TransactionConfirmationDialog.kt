@@ -34,6 +34,7 @@ import kotlinx.coroutines.async
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
+import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
 import pm.gnosis.model.Solidity
 import pm.gnosis.svalinn.common.utils.getColorCompat
 import pm.gnosis.utils.*
@@ -141,24 +142,24 @@ class TransactionConfirmationViewModel(
                                 ?.joinToString(separator = "") { (owner, signature) ->
                                     signature?.removeHexPrefix() ?: (owner.encode() + Solidity.UInt256(BigInteger.ZERO).encode() + "01")
                                 } ?: ""
-                            val executeData = GnosisSafe.ExecTransaction.encode(
-                                transaction.to,
-                                Solidity.UInt256(transaction.value),
-                                Solidity.Bytes(transaction.data.hexToByteArray()),
-                                Solidity.UInt8(transaction.operation.id.toBigInteger()),
-                                Solidity.UInt256(execInfo.txGas),
-                                Solidity.UInt256(execInfo.baseGas),
-                                Solidity.UInt256(execInfo.gasPrice),
-                                execInfo.gasToken,
-                                execInfo.refundReceiver,
-                                Solidity.Bytes(signatureString.hexToByteArray())
-                            )
-                            context.getString(R.string.action_execute_external) to "ethereum:${safe.asEthereumAddressString()}?data=$executeData"
+                            val executeLink = "ethereum:${safe.asEthereumAddressString()}/execTransaction?" +
+                                    "address=" + transaction.to.asEthereumAddressChecksumString() +
+                                    "&uint256=" + transaction.value.toString(10) +
+                                    "&bytes=" + transaction.data +
+                                    "&uint8=" + transaction.operation.id.toString() +
+                                    "&uint256=" + execInfo.txGas.toString(10) +
+                                    "&uint256=" + execInfo.baseGas.toString(10) +
+                                    "&uint256=" + execInfo.gasPrice.toString(10) +
+                                    "&address=" + execInfo.gasToken.asEthereumAddressChecksumString() +
+                                    "&address=" + execInfo.refundReceiver.asEthereumAddressChecksumString() +
+                                    "&bytes=" + signatureString.addHexPrefix()
+                            context.getString(R.string.action_execute_external) to executeLink
                         }
                     } else {
                         val safeTxHash = safeRepository.calculateSafeTransactionHash(safe, transaction, execInfo)
-                        val confirmData = GnosisSafe.ApproveHash.encode(Solidity.Bytes32(safeTxHash.hexToByteArray()))
-                        context.getString(R.string.action_confirm_external) to "ethereum:${safe.asEthereumAddressString()}?data=$confirmData"
+                        val confirmLink = "ethereum:${safe.asEthereumAddressString()}/approveHash?" +
+                                "bytes32=" + safeTxHash.addHexPrefix()
+                        context.getString(R.string.action_confirm_external) to confirmLink
                     }
                 } else null
             updateState {
