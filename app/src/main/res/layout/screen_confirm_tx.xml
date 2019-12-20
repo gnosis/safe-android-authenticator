@@ -65,8 +65,8 @@
         android:id="@+id/confirm_tx_action_icon"
         android:layout_width="32dp"
         android:layout_height="32dp"
-        android:padding="4dp"
         android:layout_marginStart="16dp"
+        android:padding="4dp"
         android:tint="@color/colorPrimary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -141,6 +141,18 @@
         app:layout_constraintTop_toTopOf="@+id/confirm_tx_fee_lbl"
         tools:text="123235345" />
 
+
+    <TextView
+        android:id="@+id/confirm_tx_confirm_via_deeplink"
+        style="@style/PrimaryButton"
+        android:layout_width="wrap_content"
+        android:visibility="gone"
+        android:layout_marginTop="8dp"
+        android:text="Confirm with external wallet"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/confirm_tx_fee_lbl" />
+
     <androidx.core.widget.NestedScrollView
         android:id="@+id/confirm_tx_description_container"
         android:layout_width="0dp"
@@ -152,7 +164,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/confirm_tx_fee_value">
+        app:layout_constraintTop_toBottomOf="@id/confirm_tx_confirm_via_deeplink">
 
         <TextView
             android:id="@+id/confirm_tx_description"

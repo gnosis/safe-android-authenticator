@@ -122,7 +122,7 @@ class TransactionsScreen : BaseFragment<TransactionsContract.State, Transactions
 
         private fun onSelected(entry: TransactionMetaEntry) {
             val safe = safe ?: return
-            activity?.let { TransactionConfirmationDialog(it, safe, entry.hash, entry.tx, entry.execInfo, this@TransactionsScreen).show() }
+            activity?.let { TransactionConfirmationDialog.show(childFragmentManager, safe, entry.hash, entry.tx, entry.execInfo) }
         }
 
         override fun getItemViewType(position: Int): Int {

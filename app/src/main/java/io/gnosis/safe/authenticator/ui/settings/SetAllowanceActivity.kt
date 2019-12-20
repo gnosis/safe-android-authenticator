@@ -121,10 +121,12 @@ class SetAllowanceActivity : BaseActivity<SetAllowanceContract.State, SetAllowan
         set_allowance_submit_btn.isEnabled = !state.loading
     }
 
-    override fun performAction(viewAction: BaseViewModel.ViewAction) {
-        when (viewAction) {
-            is SetAllowanceContract.ConfirmTransaction ->
-                TransactionConfirmationDialog(this, viewAction.safe, null, viewAction.tx, null).show()
+    override fun performAction(viewAction: BaseViewModel.ViewAction): Boolean {
+        return when (viewAction) {
+            is SetAllowanceContract.ConfirmTransaction -> {
+                TransactionConfirmationDialog.show(supportFragmentManager, viewAction.safe, null, viewAction.tx, null)
+                true
+            }
             else -> super.performAction(viewAction)
         }
     }

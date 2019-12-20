@@ -133,7 +133,7 @@ class ManageAllowancesActivity : BaseActivity<ManageAllowancesContract.State, Ma
         manage_allowances_request_access_btn.setOnClickListener {
             state.safe ?: return@setOnClickListener
             state.accessTx?.let {
-                TransactionConfirmationDialog(this, state.safe, null, it).show()
+                TransactionConfirmationDialog.show(supportFragmentManager, state.safe, null, it)
             }
         }
         manage_allowances_enable_label.text = if (state.enabled) "Click to disable" else "Click to enable"
@@ -141,7 +141,7 @@ class ManageAllowancesActivity : BaseActivity<ManageAllowancesContract.State, Ma
         manage_allowances_enable_bg.setOnClickListener {
             state.safe ?: return@setOnClickListener
             state.changeTx?.let {
-                TransactionConfirmationDialog(this, state.safe, null, it).show()
+                TransactionConfirmationDialog.show(supportFragmentManager, state.safe, null, it)
             }
         }
         manage_allowances_refresh.isRefreshing = state.loading

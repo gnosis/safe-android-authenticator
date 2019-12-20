@@ -16,15 +16,19 @@ abstract class BaseActivity<S: BaseViewModel.State, T: BaseViewModel<S>>: AppCom
         super.onCreate(savedInstanceState)
         viewModel.state.observe(this, Observer {
             updateState(it)
-            it.viewAction?.let { update -> performAction(update) }
+            it.viewAction?.let { update -> if (performAction(update)) it.viewAction = null }
         })
     }
 
-    protected open fun performAction(viewAction: BaseViewModel.ViewAction) {
+    /**
+     * @return boolean if the action should be consumed (cannot be use again by other observers afterwards
+     */
+    protected open fun performAction(viewAction: BaseViewModel.ViewAction): Boolean {
         when (viewAction) {
             is BaseViewModel.ShowToast -> {
                 Toast.makeText(this, viewAction.message, Toast.LENGTH_SHORT).show()
             }
         }
+        return false
     }
 }
