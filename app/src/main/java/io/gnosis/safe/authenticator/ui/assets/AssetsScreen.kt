@@ -78,6 +78,7 @@ class AssetsViewModel(
             val balances = if (showOnlyAllowance) {
                 val allowances = safeRepository.loadAllowances(safe)
                 safeTokens.mapNotNull { balance ->
+                    if (balance.balance == BigInteger.ZERO) return@mapNotNull null
                     val conversion =
                         (balance.usdBalance ?: BigDecimal.ZERO) * BigDecimal.TEN.pow(balance.tokenInfo.decimals) / balance.balance.toBigDecimal()
                     val allowance = allowances.find { it.token == balance.tokenInfo.address } ?: return@mapNotNull null
