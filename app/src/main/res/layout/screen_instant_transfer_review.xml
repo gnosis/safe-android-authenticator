@@ -84,7 +84,7 @@
         android:layout_marginStart="32dp"
         android:layout_marginTop="32dp"
         android:layout_marginEnd="32dp"
-        android:text="@string/amount_label"
+        android:text="@string/label_amount"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/instant_transfer_review_hint_divider" />
@@ -121,7 +121,7 @@
         android:layout_marginStart="32dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="32dp"
-        android:text="@string/recipient_label"
+        android:text="@string/label_recipient"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/instant_transfer_review_amount_text" />
@@ -159,7 +159,7 @@
         style="@style/PrimaryButton"
         android:layout_width="wrap_content"
         android:layout_margin="8dp"
-        android:text="@string/submit_action"
+        android:text="@string/action_submit"
         android:textColor="@color/white"
         android:textSize="16sp"
         android:visibility="gone"

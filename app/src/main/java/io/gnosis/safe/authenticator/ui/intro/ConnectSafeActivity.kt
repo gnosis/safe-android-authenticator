@@ -2,15 +2,11 @@ package io.gnosis.safe.authenticator.ui.intro
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
 import android.os.Bundle
-import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
-import androidx.lifecycle.liveData
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.repositories.SafeRepository
-import io.gnosis.safe.authenticator.ui.address.AddressInputActivity
 import io.gnosis.safe.authenticator.ui.base.BaseActivity
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
@@ -20,15 +16,11 @@ import io.gnosis.safe.authenticator.utils.*
 import kotlinx.android.synthetic.main.screen_connect_safe.*
 import kotlinx.coroutines.*
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
 import pm.gnosis.model.Solidity
 import pm.gnosis.svalinn.common.utils.hideSoftKeyboard
 import pm.gnosis.utils.asEthereumAddress
-import pm.gnosis.utils.asEthereumAddressString
-import retrofit2.HttpException
 import java.lang.Exception
 import java.lang.IllegalArgumentException
-import java.lang.IllegalStateException
 
 abstract class ConnectSafeContract(context: Context) : LoadingViewModel<ConnectSafeContract.State>(context) {
     abstract fun checkAddress(address: String, immediate: Boolean = false)
@@ -131,14 +123,14 @@ class ConnectSafeActivity : BaseActivity<ConnectSafeContract.State, ConnectSafeC
             hideSoftKeyboard()
             connect_safe_address_ident.setAddress(safe)
             connect_safe_address_ident.isVisible = true
-            connect_safe_submit_btn.text = getString(R.string.confirm_action)
+            connect_safe_submit_btn.text = getString(R.string.action_confirm)
             connect_safe_submit_btn.setOnClickListener {
                 viewModel.setSafe(safe)
             }
         } ?: run {
             connect_safe_address_ident.setAddress(null)
             connect_safe_address_ident.isVisible = false
-            connect_safe_submit_btn.text = getString(R.string.check_address_action)
+            connect_safe_submit_btn.text = getString(R.string.action_check_address)
             connect_safe_submit_btn.setOnClickListener {
                 viewModel.checkAddress(connect_safe_address_input.text.toString(), true)
             }

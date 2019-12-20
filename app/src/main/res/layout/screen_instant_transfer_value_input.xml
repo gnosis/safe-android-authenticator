@@ -125,7 +125,7 @@
         android:layout_width="wrap_content"
         android:layout_margin="8dp"
         android:enabled="false"
-        android:text="@string/continue_action"
+        android:text="@string/action_continue"
         android:textColor="@color/white"
         android:textSize="16sp"
         app:layout_constraintBottom_toTopOf="@id/instant_transfer_value_input_steps"
