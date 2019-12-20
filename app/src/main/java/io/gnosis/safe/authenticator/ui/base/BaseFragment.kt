@@ -2,10 +2,8 @@ package io.gnosis.safe.authenticator.ui.base
 
 import android.os.Bundle
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 abstract class BaseFragment<S: BaseViewModel.State, T: BaseViewModel<S>>: Fragment() {
 

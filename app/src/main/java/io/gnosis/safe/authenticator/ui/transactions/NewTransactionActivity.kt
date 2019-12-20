@@ -3,17 +3,14 @@ package io.gnosis.safe.authenticator.ui.transactions
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import androidx.lifecycle.liveData
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.ui.base.BaseActivity
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
 import kotlinx.android.synthetic.main.screen_new_transaction.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import pm.gnosis.utils.*
-import pm.gnosis.utils.toHexString
 import java.math.BigInteger
 
 abstract class NewTransactionContract(context: Context) : LoadingViewModel<NewTransactionContract.State>(context) {

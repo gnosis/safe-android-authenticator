@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import androidx.lifecycle.liveData
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.repositories.TokensRepository
@@ -19,7 +18,6 @@ import io.gnosis.safe.authenticator.ui.qr.QRCodeScanActivity
 import io.gnosis.safe.authenticator.utils.shiftedString
 import io.gnosis.safe.authenticator.utils.useAsAddress
 import kotlinx.android.synthetic.main.screen_instant_transfer.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import pm.gnosis.model.Solidity
 import pm.gnosis.utils.asEthereumAddress

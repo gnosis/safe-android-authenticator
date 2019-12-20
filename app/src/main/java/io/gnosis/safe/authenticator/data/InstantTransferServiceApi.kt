@@ -1,8 +1,11 @@
 package io.gnosis.safe.authenticator.data
 
 import io.gnosis.safe.authenticator.BuildConfig
-import io.gnosis.safe.authenticator.data.models.*
-import retrofit2.http.*
+import io.gnosis.safe.authenticator.data.models.InstantTransferRequest
+import io.gnosis.safe.authenticator.data.models.InstantTransferResponse
+import retrofit2.http.Body
+import retrofit2.http.POST
+import retrofit2.http.Path
 
 
 interface InstantTransferServiceApi {

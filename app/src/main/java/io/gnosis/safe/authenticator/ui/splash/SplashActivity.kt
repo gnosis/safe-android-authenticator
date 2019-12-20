@@ -2,15 +2,12 @@ package io.gnosis.safe.authenticator.ui.splash
 
 import android.content.Context
 import android.content.Intent
-import androidx.lifecycle.liveData
 import io.gnosis.safe.authenticator.repositories.SafeRepository
 import io.gnosis.safe.authenticator.ui.base.BaseActivity
 import io.gnosis.safe.authenticator.ui.base.BaseViewModel
-import io.gnosis.safe.authenticator.ui.intro.ConnectSafeActivity
 import io.gnosis.safe.authenticator.ui.intro.IntroActivity
 import io.gnosis.safe.authenticator.ui.overview.MainActivity
 import io.gnosis.safe.authenticator.utils.nullOnThrow
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 abstract class SplashContract(context: Context) : BaseViewModel<SplashContract.State>(context) {

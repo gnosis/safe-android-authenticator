@@ -14,7 +14,6 @@ import io.gnosis.safe.authenticator.ui.walletconnect.WalletConnectStatusActivity
 import io.gnosis.safe.authenticator.utils.asMiddleEllipsized
 import io.gnosis.safe.authenticator.utils.copyToClipboard
 import kotlinx.android.synthetic.main.screen_settings.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
 import pm.gnosis.model.Solidity

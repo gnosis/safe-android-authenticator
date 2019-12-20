@@ -12,15 +12,17 @@ import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
 import io.gnosis.safe.authenticator.ui.overview.MainActivity
 import io.gnosis.safe.authenticator.ui.qr.QRCodeScanActivity
-import io.gnosis.safe.authenticator.utils.*
+import io.gnosis.safe.authenticator.utils.ExceptionUtils
+import io.gnosis.safe.authenticator.utils.nullOnThrow
+import io.gnosis.safe.authenticator.utils.useAsAddress
 import kotlinx.android.synthetic.main.screen_connect_safe.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import pm.gnosis.model.Solidity
 import pm.gnosis.svalinn.common.utils.hideSoftKeyboard
 import pm.gnosis.utils.asEthereumAddress
-import java.lang.Exception
-import java.lang.IllegalArgumentException
 
 abstract class ConnectSafeContract(context: Context) : LoadingViewModel<ConnectSafeContract.State>(context) {
     abstract fun checkAddress(address: String, immediate: Boolean = false)

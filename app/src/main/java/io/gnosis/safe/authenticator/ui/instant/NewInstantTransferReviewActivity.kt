@@ -3,11 +3,7 @@ package io.gnosis.safe.authenticator.ui.instant
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.view.inputmethod.EditorInfo
-import android.widget.Toast
 import androidx.core.view.isVisible
-import androidx.core.widget.addTextChangedListener
 import com.squareup.picasso.Picasso
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.repositories.SafeRepository
@@ -17,25 +13,19 @@ import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
 import io.gnosis.safe.authenticator.ui.overview.MainActivity
 import io.gnosis.safe.authenticator.ui.overview.OverviewTypeSwitchCallback
-import io.gnosis.safe.authenticator.utils.KeyboardEventListener
 import io.gnosis.safe.authenticator.utils.nullOnThrow
 import io.gnosis.safe.authenticator.utils.setTransactionIcon
 import io.gnosis.safe.authenticator.utils.shiftedString
 import kotlinx.android.synthetic.main.screen_instant_transfer_review.*
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
 import pm.gnosis.model.Solidity
-import pm.gnosis.svalinn.common.utils.showKeyboardForView
 import pm.gnosis.utils.asEthereumAddress
 import pm.gnosis.utils.asEthereumAddressString
 import pm.gnosis.utils.hexAsBigInteger
 import pm.gnosis.utils.toHexString
-import java.math.BigDecimal
 import java.math.BigInteger
 
 abstract class NewInstantTransferReviewContract(context: Context) : LoadingViewModel<NewInstantTransferReviewContract.State>(context) {
