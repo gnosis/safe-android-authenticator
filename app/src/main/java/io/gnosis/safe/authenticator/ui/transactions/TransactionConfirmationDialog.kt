@@ -19,6 +19,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDE
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.squareup.picasso.Picasso
+import io.gnosis.safe.authenticator.BuildConfig
 import io.gnosis.safe.authenticator.GnosisSafe
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.repositories.SafeRepository
@@ -142,7 +143,7 @@ class TransactionConfirmationViewModel(
                                 ?.joinToString(separator = "") { (owner, signature) ->
                                     signature?.removeHexPrefix() ?: (owner.encode() + Solidity.UInt256(BigInteger.ZERO).encode() + "01")
                                 } ?: ""
-                            val executeLink = "ethereum:${safe.asEthereumAddressString()}/execTransaction?" +
+                            val executeLink = "ethereum:${safe.asEthereumAddressString()}/execTransaction@${BuildConfig.BLOCKCHAIN_CHAIN_ID}?" +
                                     "address=" + transaction.to.asEthereumAddressChecksumString() +
                                     "&uint256=" + transaction.value.toString(10) +
                                     "&bytes=" + transaction.data +
@@ -157,7 +158,7 @@ class TransactionConfirmationViewModel(
                         }
                     } else {
                         val safeTxHash = safeRepository.calculateSafeTransactionHash(safe, transaction, execInfo)
-                        val confirmLink = "ethereum:${safe.asEthereumAddressString()}/approveHash?" +
+                        val confirmLink = "ethereum:${safe.asEthereumAddressString()}/approveHash@${BuildConfig.BLOCKCHAIN_CHAIN_ID}?" +
                                 "bytes32=" + safeTxHash.addHexPrefix()
                         context.getString(R.string.action_confirm_external) to confirmLink
                     }
