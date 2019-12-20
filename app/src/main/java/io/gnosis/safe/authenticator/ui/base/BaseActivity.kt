@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 abstract class BaseActivity<S: BaseViewModel.State, T: BaseViewModel<S>>: AppCompatActivity() {
 

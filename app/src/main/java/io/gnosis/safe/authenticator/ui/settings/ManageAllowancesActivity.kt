@@ -24,7 +24,6 @@ import io.gnosis.safe.authenticator.ui.transactions.TransactionConfirmationDialo
 import io.gnosis.safe.authenticator.utils.shiftedString
 import kotlinx.android.synthetic.main.item_allowance.view.*
 import kotlinx.android.synthetic.main.screen_manage_allowances.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import pm.gnosis.model.Solidity
 import pm.gnosis.utils.asEthereumAddress

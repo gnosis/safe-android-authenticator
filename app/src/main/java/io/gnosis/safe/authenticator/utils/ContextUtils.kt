@@ -1,9 +1,11 @@
 package io.gnosis.safe.authenticator.utils
 
-import android.content.*
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.provider.Browser
-import timber.log.Timber
 
 fun Context.copyToClipboard(label: String, text: String, onCopy: (String) -> Unit = {}) {
     val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager

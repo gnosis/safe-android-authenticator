@@ -2,7 +2,6 @@ package io.gnosis.safe.authenticator.repositories
 
 import android.content.Context
 import io.gnosis.safe.authenticator.BuildConfig
-import io.gnosis.safe.authenticator.GnosisSafe
 import io.gnosis.safe.authenticator.data.JsonRpcApi
 import io.gnosis.safe.authenticator.utils.performCall
 import pm.gnosis.crypto.utils.Sha3Utils

@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.view.ViewGroup
 import androidx.core.widget.addTextChangedListener
-import androidx.lifecycle.liveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -24,7 +23,6 @@ import io.gnosis.safe.authenticator.utils.nullOnThrow
 import io.gnosis.safe.authenticator.utils.parseEthereumAddress
 import io.gnosis.safe.authenticator.utils.shortChecksumString
 import kotlinx.android.synthetic.main.screen_address_input.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import org.koin.androidx.viewmodel.ext.android.viewModel

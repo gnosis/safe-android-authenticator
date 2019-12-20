@@ -9,7 +9,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import pm.gnosis.crypto.utils.asEthereumAddressChecksumString
 import pm.gnosis.model.Solidity
-import java.lang.Exception
 import java.math.BigInteger
 import java.util.concurrent.ConcurrentHashMap
 

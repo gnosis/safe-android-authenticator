@@ -3,7 +3,6 @@ package io.gnosis.safe.authenticator.ui.settings
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import androidx.lifecycle.liveData
 import io.gnosis.safe.authenticator.AllowanceModule
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.repositories.SafeRepository
@@ -15,7 +14,6 @@ import io.gnosis.safe.authenticator.ui.transactions.TransactionConfirmationDialo
 import io.gnosis.safe.authenticator.utils.MultiSendTransactionBuilder
 import io.gnosis.safe.authenticator.utils.useAsAddress
 import kotlinx.android.synthetic.main.screen_set_allowance.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import pm.gnosis.model.Solidity
 import pm.gnosis.utils.asEthereumAddress

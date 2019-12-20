@@ -2,7 +2,8 @@ package io.gnosis.safe.authenticator.data
 
 import io.gnosis.safe.authenticator.BuildConfig
 import io.gnosis.safe.authenticator.data.models.ServiceTokenInfo
-import retrofit2.http.*
+import retrofit2.http.GET
+import retrofit2.http.Path
 
 
 interface RelayServiceApi {

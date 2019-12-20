@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
-import androidx.lifecycle.liveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import com.squareup.picasso.Picasso
@@ -18,7 +17,6 @@ import io.gnosis.safe.authenticator.ui.base.BaseViewModel
 import io.gnosis.safe.authenticator.ui.base.LoadingViewModel
 import io.gnosis.safe.authenticator.utils.nullOnThrow
 import kotlinx.android.synthetic.main.screen_transactions.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import pm.gnosis.model.Solidity

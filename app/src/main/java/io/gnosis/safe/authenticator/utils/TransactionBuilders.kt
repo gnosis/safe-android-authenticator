@@ -4,7 +4,6 @@ import io.gnosis.safe.authenticator.BuildConfig
 import io.gnosis.safe.authenticator.MultiSend
 import io.gnosis.safe.authenticator.repositories.SafeRepository
 import pm.gnosis.model.Solidity
-import pm.gnosis.model.SolidityBase
 import pm.gnosis.utils.asEthereumAddress
 import pm.gnosis.utils.hexStringToByteArray
 import java.math.BigInteger

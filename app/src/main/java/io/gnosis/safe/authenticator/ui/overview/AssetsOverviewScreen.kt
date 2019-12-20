@@ -9,7 +9,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.ViewPager
-import androidx.viewpager2.widget.ViewPager2
 import io.gnosis.safe.authenticator.R
 import io.gnosis.safe.authenticator.ui.assets.AssetsScreen
 import io.gnosis.safe.authenticator.ui.settings.SettingsActivity

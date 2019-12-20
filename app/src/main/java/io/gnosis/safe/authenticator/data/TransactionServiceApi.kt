@@ -5,7 +5,10 @@ import io.gnosis.safe.authenticator.data.models.PaginatedResult
 import io.gnosis.safe.authenticator.data.models.ServiceBalance
 import io.gnosis.safe.authenticator.data.models.ServiceTransaction
 import io.gnosis.safe.authenticator.data.models.ServiceTransactionRequest
-import retrofit2.http.*
+import retrofit2.http.Body
+import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.Path
 
 
 interface TransactionServiceApi {

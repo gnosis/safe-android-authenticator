@@ -1,7 +1,6 @@
 package io.gnosis.safe.authenticator.repositories
 
 import android.content.Context
-import android.os.Parcel
 import android.os.Parcelable
 import io.gnosis.safe.authenticator.*
 import io.gnosis.safe.authenticator.BuildConfig

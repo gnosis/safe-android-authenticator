@@ -47,7 +47,7 @@ abstract class TransactionConfirmationContract(context: Context) : LoadingViewMo
         val loading: Boolean,
         val fees: BigInteger?,
         val signedHash: String?,
-        val confirmationDeeplink: String?,
+        val deeplink: Pair<String, String>?,
         val txInfo: SafeRepository.TransactionInfo?,
         val txState: TransactionState?,
         override var viewAction: ViewAction?
@@ -132,36 +132,40 @@ class TransactionConfirmationViewModel(
                 if (submissionState != SubmissionState.EXECUTED && submissionState != SubmissionState.CANCELED) {
                     val execInfo = getExecInfoAsync().await()
                     if (safeInfo.threshold.toInt() <= confirmationCount) {
-                        // TODO: how to get the address of the other wallet
-                        val signatureString = transactionInfo?.confirmations
-                            ?.sortedBy { it.first.value }
-                            ?.joinToString(separator = "") { (owner, signature) ->
-                                signature?.removeHexPrefix() ?: (owner.encode() + Solidity.UInt256(BigInteger.ZERO).encode() + "01")
-                            } ?: ""
-                        val executeData = GnosisSafe.ExecTransaction.encode(
-                            transaction.to,
-                            Solidity.UInt256(transaction.value),
-                            Solidity.Bytes(transaction.data.hexToByteArray()),
-                            Solidity.UInt8(transaction.operation.id.toBigInteger()),
-                            Solidity.UInt256(execInfo.txGas),
-                            Solidity.UInt256(execInfo.baseGas),
-                            Solidity.UInt256(execInfo.gasPrice),
-                            execInfo.gasToken,
-                            execInfo.refundReceiver,
-                            Solidity.Bytes(signatureString.hexToByteArray())
-                        )
-                        "ethereum://${safe.asEthereumAddressString()}?data=$executeData"
+                        if (safeInfo.currentNonce != execInfo.nonce)
+                            null // Cannot execute
+                        else {
+                            // TODO: how to get the address of the other wallet
+                            val signatureString = transactionInfo?.confirmations
+                                ?.sortedBy { it.first.value }
+                                ?.joinToString(separator = "") { (owner, signature) ->
+                                    signature?.removeHexPrefix() ?: (owner.encode() + Solidity.UInt256(BigInteger.ZERO).encode() + "01")
+                                } ?: ""
+                            val executeData = GnosisSafe.ExecTransaction.encode(
+                                transaction.to,
+                                Solidity.UInt256(transaction.value),
+                                Solidity.Bytes(transaction.data.hexToByteArray()),
+                                Solidity.UInt8(transaction.operation.id.toBigInteger()),
+                                Solidity.UInt256(execInfo.txGas),
+                                Solidity.UInt256(execInfo.baseGas),
+                                Solidity.UInt256(execInfo.gasPrice),
+                                execInfo.gasToken,
+                                execInfo.refundReceiver,
+                                Solidity.Bytes(signatureString.hexToByteArray())
+                            )
+                            context.getString(R.string.action_execute_external) to "ethereum:${safe.asEthereumAddressString()}?data=$executeData"
+                        }
                     } else {
                         val safeTxHash = safeRepository.calculateSafeTransactionHash(safe, transaction, execInfo)
                         val confirmData = GnosisSafe.ApproveHash.encode(Solidity.Bytes32(safeTxHash.hexToByteArray()))
-                        "ethereum://${safe.asEthereumAddressString()}?data=$confirmData"
+                        context.getString(R.string.action_confirm_external) to "ethereum:${safe.asEthereumAddressString()}?data=$confirmData"
                     }
                 } else null
             updateState {
                 copy(
                     loading = false,
                     txState = state,
-                    confirmationDeeplink = deeplink
+                    deeplink = deeplink
                 )
             }
         }
@@ -253,11 +257,12 @@ class TransactionConfirmationDialog : BottomSheetDialogFragment() {
                 callback?.clear()
                 dismiss()
             }
-            it.confirmationDeeplink?.let { deeplink ->
+            it.deeplink?.let { (label, link) ->
                 confirm_tx_confirm_via_deeplink.isVisible = true
+                confirm_tx_confirm_via_deeplink.text = label
                 confirm_tx_confirm_via_deeplink.setOnClickListener {
                     try {
-                        startActivityForResult(context?.createUrlIntent(deeplink), REQUEST_CODE_CONFIRM_TX)
+                        startActivityForResult(context?.createUrlIntent(link), REQUEST_CODE_CONFIRM_TX)
                     } catch (e: Exception) {
                         Toast.makeText(context, "Could not find an external wallet", Toast.LENGTH_SHORT).show()
                     }
