@@ -26,7 +26,7 @@ android {
         buildConfigField javaTypes.STRING, "TRANSACTION_SERVICE_URL", asString(getKey("TRANSACTION_SERVICE_URL", "https://safe-transaction.rinkeby.gnosis.io/api/"))
         buildConfigField javaTypes.STRING, "INSTANT_TRANSFER_SERVICE_URL", asString(getKey("INSTANT_TRANSFER_SERVICE_URL", "https://safe-rinkeby-relay.herokuapp.com/api/"))
 
-        buildConfigField javaTypes.STRING, "ENS_REGISTRY", asString(getKey("ENS_REGISTRY", "0xe7410170f87102df0055eb195163a03b7f2bff4a"))
+        buildConfigField javaTypes.STRING, "ENS_REGISTRY", asString(getKey("ENS_REGISTRY", "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"))
         buildConfigField javaTypes.STRING, "ALLOWANCE_MODULE", asString(getKey("ALLOWANCE_MODULE", "0xb4f7291fA058fbcbdcBb347647459aCb2f714a80"))
         buildConfigField javaTypes.STRING, "MULTI_SEND_ADDRESS", asString(getKey("MULTI_SEND_ADDRESS", "0x8d29be29923b68abfdd21e541b9374737b49cdad"))
 
@@ -75,7 +75,7 @@ android {
             buildConfigField javaTypes.STRING, "TRANSACTION_SERVICE_URL", asString(getKey("TRANSACTION_SERVICE_URL", "https://safe-transaction.gnosis.io/api/"))
             buildConfigField javaTypes.STRING, "INSTANT_TRANSFER_SERVICE_URL", asString(getKey("INSTANT_TRANSFER_SERVICE_URL", "https://safe-mainnet-relay.herokuapp.com/api/"))
 
-            buildConfigField javaTypes.STRING, "ENS_REGISTRY", asString(getKey("ENS_REGISTRY", "0x314159265dd8dbb310642f98f50c066173c1259b"))
+            buildConfigField javaTypes.STRING, "ENS_REGISTRY", asString(getKey("ENS_REGISTRY", "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"))
             buildConfigField javaTypes.STRING, "ALLOWANCE_MODULE", asString(getKey("ALLOWANCE_MODULE", "0x1DB1a2063504D15D36e9506A192ab7BBb17dbb2A"))
 
             firebaseAppDistribution {
